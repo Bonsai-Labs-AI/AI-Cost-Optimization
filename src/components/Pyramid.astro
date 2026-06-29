@@ -1,0 +1,332 @@
+---
+import { MATURITY_LEVELS, CATEGORIES } from '../data/taxonomy.mjs';
+
+interface Tech {
+  slug: string;
+  title: string;
+  category: string;
+  maturityLevel: number;
+  shortDescription: string;
+  status: string;
+  href: string;
+}
+interface Props {
+  techniques: Tech[];
+}
+const { techniques } = Astro.props;
+
+const techByLevel = (lvl: number) =>
+  techniques
+    .filter((t) => t.maturityLevel === lvl)
+    .sort((a, b) => a.title.localeCompare(b.title));
+
+// Top (L4, narrow apex) → bottom (L0, wide base).
+const tiers = [...MATURITY_LEVELS].sort((a, b) => b.level - a.level);
+// Band width grows toward the base so the stacked left column reads as a pyramid.
+const widthFor = (lvl: number) => 52 + (4 - lvl) * 12; // L4=52% … L0=100%
+const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.short ?? slug;
+---
+
+<section class="pyramid">
+  <div class="pyramid-filters" id="cat-filters">
+    <button class="chip chip-active" data-cat="all">All categories</button>
+    {CATEGORIES.map((c) => <button class="chip" data-cat={c.slug}>{c.short}</button>)}
+  </div>
+
+  <div class="pyr-grid">
+    {
+      tiers.map((tier) => {
+        const items = techByLevel(tier.level);
+        return (
+          <div class={`pyr-row pyr-l${tier.level}`} data-level={tier.level}>
+            <div class="pyr-band-cell">
+              <div class="pyr-band" style={`--w:${widthFor(tier.level)}%`}>
+                <span class="pyr-tag">L{tier.level}</span>
+                <span class="pyr-name">{tier.name}</span>
+                <span class="pyr-tagline">{tier.tagline}</span>
+                <span class="pyr-count">{items.length} techniques</span>
+              </div>
+            </div>
+            <div class="pyr-techs">
+              <p class="pyr-desc">{tier.description}</p>
+              <div class="chip-cloud">
+                {items.map((t) => (
+                  <button
+                    class={`tech-chip${t.status === 'planned' || !t.status ? ' is-planned' : ''}`}
+                    data-href={t.href}
+                    data-id={`${t.category}/${t.slug}`}
+                    data-cat={t.category}
+                    title={t.shortDescription}
+                  >
+                    <span class="tech-dot" />
+                    <span class="tech-chip-title">{t.title}</span>
+                    <span class="tech-chip-cat">{catShort(t.category)}</span>
+                  </button>
+                ))}
+                <p class="chip-empty" hidden>No techniques in this category at this level.</p>
+              </div>
+            </div>
+          </div>
+        );
+      })
+    }
+  </div>
+  <p class="pyramid-hint">
+    Base = obvious waste, apex = near-frontier. Click any technique to open it.
+  </p>
+</section>
+
+<!-- Technique modal: loads the technique page content on click, no navigation. -->
+<div class="modal-overlay" id="tech-modal" hidden>
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-label="Technique detail">
+    <div class="modal-bar">
+      <a class="modal-fullpage" id="modal-fullpage" href="#">Open full page ↗</a>
+      <button class="modal-close" id="modal-close" data-close aria-label="Close">✕</button>
+    </div>
+    <div class="modal-scroll">
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+</div>
+
+<script
+  type="application/json"
+  id="pyramid-data"
+  set:html={JSON.stringify({ techniques })}
+/>
+
+<style>
+  .pyramid { margin: 8px 0 8px; }
+
+  .pyramid-filters { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin: 0 0 22px; }
+  .chip {
+    font-size: 0.8rem; padding: 5px 11px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--border-strong); background: var(--bg-elev); color: var(--text-dim);
+    transition: color 0.12s, background 0.12s, border-color 0.12s;
+  }
+  .chip:hover { color: var(--text); }
+  .chip-active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+
+  .pyr-grid { display: flex; flex-direction: column; gap: 10px; }
+  .pyr-row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; }
+
+  /* Left column: a colored band whose width grows toward the base → pyramid silhouette. */
+  .pyr-band-cell { display: flex; justify-content: center; }
+  .pyr-band {
+    width: var(--w);
+    min-height: 92px;
+    border-radius: 10px;
+    border: 1px solid var(--tier-color);
+    background: color-mix(in srgb, var(--tier-color) 12%, var(--bg-elev));
+    box-shadow: inset 4px 0 0 var(--tier-color);
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: box-shadow 0.15s, transform 0.15s;
+  }
+  .pyr-l0 .pyr-band { --tier-color: var(--l0); }
+  .pyr-l1 .pyr-band { --tier-color: var(--l1); }
+  .pyr-l2 .pyr-band { --tier-color: var(--l2); }
+  .pyr-l3 .pyr-band { --tier-color: var(--l3); }
+  .pyr-l4 .pyr-band { --tier-color: var(--l4); }
+  .pyr-tag { font-family: var(--mono); font-size: 0.78rem; font-weight: 700; color: var(--tier-color); }
+  .pyr-name { font-weight: 700; font-size: 1.04rem; line-height: 1.2; }
+  .pyr-tagline { color: var(--text-dim); font-size: 0.82rem; }
+  .pyr-count { color: var(--text-faint); font-size: 0.75rem; margin-top: 2px; }
+
+  .pyr-techs { padding-top: 2px; }
+  .pyr-desc { margin: 0 0 10px; color: var(--text-dim); font-size: 0.88rem; max-width: 72ch; }
+  .chip-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .tech-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    font: inherit; font-size: 0.85rem; cursor: pointer; text-align: left;
+    padding: 6px 11px 6px 9px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--bg-elev); color: var(--text);
+    transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s, background 0.12s;
+  }
+  .tech-chip:hover { border-color: var(--tier-color, var(--accent)); box-shadow: var(--shadow); transform: translateY(-1px); }
+  .tech-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .pyr-l0 .tech-chip { --tier-color: var(--l0); }
+  .pyr-l1 .tech-chip { --tier-color: var(--l1); }
+  .pyr-l2 .tech-chip { --tier-color: var(--l2); }
+  .pyr-l3 .tech-chip { --tier-color: var(--l3); }
+  .pyr-l4 .tech-chip { --tier-color: var(--l4); }
+  .tech-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tier-color, var(--accent)); flex: none; }
+  .tech-chip-cat { color: var(--text-faint); font-size: 0.72rem; }
+  .tech-chip.is-planned { border-style: dashed; color: var(--text-dim); }
+  .tech-chip.is-planned .tech-dot { opacity: 0.5; }
+  .tech-chip.chip-hidden { display: none; }
+  .chip-empty { margin: 2px 0; color: var(--text-faint); font-size: 0.85rem; font-style: italic; }
+
+  .pyramid-hint { text-align: center; color: var(--text-faint); font-size: 0.85rem; margin: 22px 0 0; }
+
+  @media (max-width: 720px) {
+    .pyr-row { grid-template-columns: 1fr; gap: 10px; }
+    .pyr-band-cell { justify-content: flex-start; }
+    .pyr-band { width: 100% !important; min-height: 0; }
+  }
+
+  /* ---- Modal ---- */
+  .modal-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .modal-overlay[hidden] { display: none; }
+  .modal-backdrop { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.42); backdrop-filter: blur(2px); animation: fade 0.12s ease; }
+  .modal-panel {
+    position: relative; z-index: 1;
+    width: min(820px, 100%); max-height: 90vh;
+    display: flex; flex-direction: column;
+    background: var(--bg); border: 1px solid var(--border-strong);
+    border-radius: 14px; box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+    animation: pop 0.14s ease;
+  }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(0.99); } to { opacity: 1; transform: none; } }
+  .modal-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    background: var(--bg-elev); border-radius: 14px 14px 0 0; flex: none;
+  }
+  .modal-fullpage { font-size: 0.85rem; color: var(--accent); }
+  .modal-close {
+    width: 30px; height: 30px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--border-strong); background: var(--bg-elev); color: var(--text-dim);
+    font-size: 0.9rem; line-height: 1; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { color: var(--text); border-color: var(--text-faint); }
+  .modal-scroll { overflow: auto; padding: 4px 26px 26px; }
+  .modal-body { min-height: 80px; }
+  .modal-body :global(h1) { font-size: 1.6rem; margin-top: 14px; }
+  .modal-loading { color: var(--text-faint); padding: 30px 0; text-align: center; }
+</style>
+
+<script>
+  import { initCitationPopovers } from '../scripts/citationPopover';
+
+  type Tech = {
+    slug: string; title: string; category: string; maturityLevel: number;
+    shortDescription: string; status: string; href: string;
+  };
+  const data = JSON.parse(document.getElementById('pyramid-data')!.textContent || '{}') as {
+    techniques: Tech[];
+  };
+
+  // ---- Category filter ----
+  const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('#cat-filters .chip'));
+  const techChips = Array.from(document.querySelectorAll<HTMLButtonElement>('.tech-chip'));
+  const clouds = Array.from(document.querySelectorAll<HTMLElement>('.chip-cloud'));
+
+  function applyFilter(cat: string) {
+    techChips.forEach((c) =>
+      c.classList.toggle('chip-hidden', cat !== 'all' && c.dataset.cat !== cat)
+    );
+    // Show an "empty" note in any level that now has nothing visible.
+    clouds.forEach((cloud) => {
+      const visible = cloud.querySelectorAll('.tech-chip:not(.chip-hidden)').length;
+      const note = cloud.querySelector<HTMLElement>('.chip-empty');
+      if (note) note.hidden = visible > 0;
+    });
+  }
+  chips.forEach((c) =>
+    c.addEventListener('click', () => {
+      chips.forEach((x) => x.classList.toggle('chip-active', x === c));
+      applyFilter(c.dataset.cat || 'all');
+    })
+  );
+
+  // ---- Modal ----
+  const overlay = document.getElementById('tech-modal') as HTMLElement;
+  const body = document.getElementById('modal-body') as HTMLElement;
+  const scroll = overlay.querySelector('.modal-scroll') as HTMLElement;
+  const fullLink = document.getElementById('modal-fullpage') as HTMLAnchorElement;
+  const closeBtn = document.getElementById('modal-close') as HTMLButtonElement;
+
+  let teardownCites: (() => void) | null = null;
+  let lastFocus: HTMLElement | null = null;
+  let reqToken = 0;
+
+  function openModal(href: string, id: string) {
+    lastFocus = document.activeElement as HTMLElement;
+    fullLink.href = href;
+    body.innerHTML = '<p class="modal-loading">Loading…</p>';
+    overlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+    scroll.scrollTop = 0;
+    closeBtn.focus();
+    if (location.hash !== `#t/${id}`) history.pushState({ modal: id }, '', `#t/${id}`);
+    loadInto(href);
+  }
+
+  async function loadInto(href: string) {
+    const token = ++reqToken;
+    try {
+      const res = await fetch(href, { headers: { 'X-Requested-With': 'modal' } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      if (token !== reqToken) return; // a newer open superseded this one
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const main = doc.querySelector('main');
+      if (!main) throw new Error('No content');
+      // Drop the breadcrumb (first paragraph) and any executable scripts.
+      const crumb = main.querySelector('p');
+      if (crumb && crumb.querySelector('a[href$="/techniques/"]')) crumb.remove();
+      main.querySelectorAll('script:not([type="application/json"])').forEach((s) => s.remove());
+      teardownCites?.();
+      body.innerHTML = main.innerHTML;
+      teardownCites = initCitationPopovers(body);
+    } catch (err) {
+      if (token !== reqToken) return;
+      body.innerHTML =
+        `<p class="modal-loading">Couldn't load this technique. ` +
+        `<a href="${href}">Open the full page instead ↗</a></p>`;
+    }
+  }
+
+  function closeModal(fromPop = false) {
+    if (overlay.hidden) return;
+    overlay.hidden = true;
+    document.body.style.overflow = '';
+    teardownCites?.();
+    teardownCites = null;
+    body.innerHTML = '';
+    reqToken++; // cancel any in-flight load
+    lastFocus?.focus?.();
+    if (!fromPop && location.hash.startsWith('#t/')) history.pushState('', '', location.pathname + location.search);
+  }
+
+  techChips.forEach((chip) =>
+    chip.addEventListener('click', () => openModal(chip.dataset.href!, chip.dataset.id!))
+  );
+  overlay.querySelectorAll('[data-close]').forEach((el) =>
+    el.addEventListener('click', () => closeModal())
+  );
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !overlay.hidden) closeModal();
+  });
+
+  // Deep-linking: #t/<category>/<slug> opens the matching technique.
+  function openFromHash(fromPop = false) {
+    const m = location.hash.match(/^#t\/(.+)$/);
+    if (!m) {
+      if (fromPop) closeModal(true);
+      return;
+    }
+    const id = decodeURIComponent(m[1]);
+    const chip = techChips.find((c) => c.dataset.id === id);
+    if (chip) {
+      if (fromPop) {
+        // Reflect a back/forward nav without pushing more history.
+        fullLink.href = chip.dataset.href!;
+        body.innerHTML = '<p class="modal-loading">Loading…</p>';
+        overlay.hidden = false;
+        document.body.style.overflow = 'hidden';
+        loadInto(chip.dataset.href!);
+      } else {
+        openModal(chip.dataset.href!, id);
+      }
+    }
+  }
+  window.addEventListener('popstate', () => openFromHash(true));
+  openFromHash();
+</script>

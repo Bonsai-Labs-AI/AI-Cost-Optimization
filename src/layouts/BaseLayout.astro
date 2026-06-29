@@ -1,0 +1,40 @@
+---
+import '../styles/global.css';
+interface Props {
+  title: string;
+  description?: string;
+}
+const { title, description } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>📐</text></svg>" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap">
+        <a class="brand" href={base + '/'}>Bonsai · <span>AI Cost Optimization</span></a>
+        <nav class="nav">
+          <a href={base + '/'}>Pyramid</a>
+          <a href={base + '/techniques/'}>All techniques</a>
+        </nav>
+      </div>
+    </header>
+    <main class="wrap" style="padding-top: 32px;">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="wrap">
+        Bonsai Labs — internal research. Maturity levels and scores are working
+        estimates; see <code>docs/RESEARCH_PLAN.md</code>.
+      </div>
+    </footer>
+  </body>
+</html>

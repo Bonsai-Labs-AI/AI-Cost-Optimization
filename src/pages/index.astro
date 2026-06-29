@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Pyramid from '../components/Pyramid.astro';
+import { CATEGORIES } from '../data/taxonomy.mjs';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const entries = await getCollection('techniques');
+
+const techniques = entries
+  .map((e) => ({
+    slug: e.id.split('/').pop()!,
+    title: e.data.title,
+    category: e.data.category,
+    maturityLevel: e.data.maturityLevel,
+    shortDescription: e.data.shortDescription,
+    status: e.data.status,
+    href: `${base}/techniques/${e.id}/`,
+  }))
+  .sort((a, b) => a.title.localeCompare(b.title));
+
+const total = techniques.length;
+const researched = entries.filter((e) => e.data.status !== 'planned').length;
+---
+
+<BaseLayout
+  title="AI Cost Optimization — Maturity Pyramid"
+  description="A maturity-model field guide to cost optimization techniques for AI products."
+>
+  <section style="text-align:center; max-width: 760px; margin: 8px auto 30px;">
+    <h1>Cost Optimization for AI Products</h1>
+    <p style="color:var(--text-dim); font-size:1.1rem;">
+      A maturity-model field guide to making AI products cheaper without sacrificing
+      quality. {total} techniques across {CATEGORIES.length} categories, mapped to five
+      levels of optimization maturity.
+    </p>
+    <p style="color:var(--text-faint); font-size:0.9rem;">
+      {researched} of {total} researched · the rest are stubs awaiting deep research.
+    </p>
+  </section>
+
+  <Pyramid techniques={techniques} />
+
+  <section style="margin-top:48px;">
+    <h2 style="border-bottom:1px solid var(--border); padding-bottom:8px;">Browse by category</h2>
+    <div class="tech-list" style="margin-top:18px;">
+      {
+        CATEGORIES.map((c) => (
+          <a class="card" href={`${base}/techniques/#${c.slug}`}>
+            <h3 style="margin:0 0 6px; font-size:1.02rem;">{c.label}</h3>
+            <p style="margin:0; color:var(--text-dim); font-size:0.9rem;">{c.blurb}</p>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>

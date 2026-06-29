@@ -1,0 +1,19 @@
+{
+  "name": "bonsai-cost-optimization-research",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cost Optimization for AI Products — research documentation site organized as a maturity pyramid.",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "gen:stubs": "node scripts/generate-stubs.mjs",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "astro": "^5.6.1"
+  }
+}

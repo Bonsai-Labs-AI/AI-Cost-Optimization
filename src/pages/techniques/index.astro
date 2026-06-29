@@ -1,0 +1,47 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TechniqueCard from '../../components/TechniqueCard.astro';
+import { CATEGORIES } from '../../data/taxonomy.mjs';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const entries = await getCollection('techniques');
+
+const byCategory = CATEGORIES.map((cat) => ({
+  cat,
+  items: entries
+    .filter((e) => e.data.category === cat.slug)
+    .sort((a, b) => a.data.maturityLevel - b.data.maturityLevel || a.data.title.localeCompare(b.data.title)),
+}));
+---
+
+<BaseLayout title="All techniques — AI Cost Optimization" description="Every cost-optimization technique, grouped by category.">
+  <h1>All techniques</h1>
+  <p style="color:var(--text-dim);">{entries.length} techniques across {CATEGORIES.length} categories. Jump to a category:</p>
+  <div class="filters" style="margin-bottom:8px;">
+    {CATEGORIES.map((c) => <a class="chip" href={`#${c.slug}`}>{c.short}</a>)}
+  </div>
+
+  {
+    byCategory.map(({ cat, items }) => (
+      <section id={cat.slug} style="margin-top:40px; scroll-margin-top:80px;">
+        <h2 style="border-bottom:1px solid var(--border); padding-bottom:8px;">{cat.label}</h2>
+        <p style="color:var(--text-dim); margin-top:6px;">{cat.blurb}</p>
+        <div class="tech-list" style="margin-top:16px;">
+          {items.map((e) => (
+            <TechniqueCard
+              href={`${base}/techniques/${e.id}/`}
+              title={e.data.title}
+              shortDescription={e.data.shortDescription}
+              category={e.data.category}
+              maturityLevel={e.data.maturityLevel}
+              status={e.data.status}
+              effort={e.data.effort}
+              gain={e.data.gain}
+            />
+          ))}
+        </div>
+      </section>
+    ))
+  }
+</BaseLayout>

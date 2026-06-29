@@ -1,0 +1,16 @@
+---
+// A small pill. Either a maturity-level badge (pass `level`) or a plain label.
+interface Props {
+  level?: number;
+  label?: string;
+  title?: string;
+}
+const { level, label, title } = Astro.props;
+const cls = level !== undefined ? `badge badge-l${level}` : 'badge';
+const text = label ?? (level !== undefined ? `Level ${level}` : '');
+const dotVar = level !== undefined ? `var(--l${level})` : 'var(--text-faint)';
+---
+<span class={cls} title={title}>
+  {level !== undefined && <span class="dot" style={`background:${dotVar}`}></span>}
+  {text}
+</span>

@@ -1,0 +1,29 @@
+---
+import Badge from './Badge.astro';
+import { categoryBySlug } from '../data/taxonomy.mjs';
+interface Props {
+  href: string;
+  title: string;
+  shortDescription: string;
+  category: string;
+  maturityLevel: number;
+  status?: string;
+  effort?: string;
+  gain?: string;
+}
+const { href, title, shortDescription, category, maturityLevel, status, effort, gain } =
+  Astro.props;
+const cat = categoryBySlug(category);
+const planned = status === 'planned' || !status;
+---
+<a class={`card tech-card ${planned ? 'status-planned' : ''}`} href={href}>
+  <h3>{title}</h3>
+  <p>{shortDescription}</p>
+  <div class="foot">
+    <Badge level={maturityLevel} />
+    <Badge label={cat?.short ?? category} />
+    {effort && <Badge label={`Effort: ${effort}`} />}
+    {gain && <Badge label={`Gain: ${gain}`} />}
+    {planned && <Badge label="planned" />}
+  </div>
+</a>

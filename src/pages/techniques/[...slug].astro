@@ -1,0 +1,150 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Badge from '../../components/Badge.astro';
+import { categoryBySlug, levelByNumber } from '../../data/taxonomy.mjs';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('techniques');
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const cat = categoryBySlug(d.category);
+const lvl = levelByNumber(d.maturityLevel);
+
+function formatSource(s: any) {
+  const bits = [s.authors, s.title ? `“${s.title}”` : null, s.publisher, s.year]
+    .filter(Boolean)
+    .join('. ');
+  return bits;
+}
+
+// Split a "Lead phrase — explanation" entry into [lead, rest] for bold rendering.
+function splitLead(s: string): [string, string] {
+  for (const sep of [' — ', ' – ', ' - ']) {
+    const i = s.indexOf(sep);
+    if (i !== -1) return [s.slice(0, i), s.slice(i + sep.length)];
+  }
+  return [s, ''];
+}
+
+// Data for the inline citation popovers, keyed by source id (== footnote id).
+const citationData = Object.fromEntries(
+  d.sources.map((s: any) => [
+    s.id,
+    {
+      title: s.title ?? '',
+      pub: [s.authors, s.publisher, s.year].filter(Boolean).join(' · '),
+      note: s.note ?? '',
+      url: s.url ?? '',
+      kind: s.kind ?? '',
+    },
+  ])
+);
+---
+
+<BaseLayout title={`${d.title} — AI Cost Optimization`} description={d.shortDescription}>
+  <p style="margin:0 0 4px;">
+    <a href={`${base}/techniques/`} style="color:var(--text-faint); font-size:0.88rem;">← All techniques</a>
+    <span style="color:var(--text-faint);"> / </span>
+    <a href={`${base}/techniques/#${d.category}`} style="color:var(--text-dim); font-size:0.88rem;">{cat?.label}</a>
+  </p>
+
+  <h1>{d.title}</h1>
+  <p style="color:var(--text-dim); font-size:1.08rem; margin-top:4px;">{d.shortDescription}</p>
+
+  <div class="meta-row">
+    <Badge level={d.maturityLevel} title={lvl?.name} label={`Level ${d.maturityLevel} — ${lvl?.name}`} />
+    <Badge label={cat?.label ?? d.category} />
+    {d.maturityProvisional && <Badge label="level: provisional" />}
+    {d.status && <Badge label={`status: ${d.status}`} />}
+  </div>
+
+  <div class="scorecard">
+    <div class={`cell${d.effortWhy ? ' has-why' : ''}`}>
+      <div class="k">Level of Effort</div>
+      <div class="v">{d.effort ?? '—'}</div>
+      {d.effortWhy && <div class="cell-why">{d.effortWhy}</div>}
+    </div>
+    <div class={`cell${d.gainWhy ? ' has-why' : ''}`}>
+      <div class="k">Possible Gain</div>
+      <div class="v">{d.gain ?? '—'}</div>
+      {d.gainWhy && <div class="cell-why">{d.gainWhy}</div>}
+    </div>
+    <div class={`cell${d.riskWhy ? ' has-why' : ''}`}>
+      <div class="k">Risk to Quality</div>
+      <div class="v">{d.riskToQuality ?? '—'}</div>
+      {d.riskWhy && <div class="cell-why">{d.riskWhy}</div>}
+    </div>
+    <div class={`cell${lvl?.description ? ' has-why' : ''}`}>
+      <div class="k">Maturity Level</div>
+      <div class="v">L{d.maturityLevel} · {lvl?.name}</div>
+      {lvl?.description && <div class="cell-why">{lvl.description}</div>}
+    </div>
+  </div>
+
+  {
+    (d.detectionSignals.length > 0 || d.measurementMethods.length > 0) && (
+      <div class="scorecard" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        {d.detectionSignals.length > 0 && (
+          <div class="cell">
+            <div class="k">Detection Signals</div>
+            <ul class="lead-list">
+              {d.detectionSignals.map((s: string) => {
+                const [lead, rest] = splitLead(s);
+                return <li>{rest ? <><strong>{lead}</strong> — {rest}</> : s}</li>;
+              })}
+            </ul>
+          </div>
+        )}
+        {d.measurementMethods.length > 0 && (
+          <div class="cell">
+            <div class="k">Measurement Method</div>
+            <ul class="lead-list">
+              {d.measurementMethods.map((s: string) => {
+                const [lead, rest] = splitLead(s);
+                return <li>{rest ? <><strong>{lead}</strong> — {rest}</> : s}</li>;
+              })}
+            </ul>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  <article class="prose" style="margin-top:8px;">
+    <Content />
+  </article>
+
+  {
+    d.sources.length > 0 && (
+      <section class="references" style="margin-top:40px; border-top:1px solid var(--border); padding-top:18px;">
+        <h2>References</h2>
+        <ol>
+          {d.sources.map((s: any) => (
+            <li id={`ref-${s.id}`}>
+              {s.url ? <a href={s.url}>{formatSource(s)}</a> : <span>{formatSource(s)}</span>}
+              {s.kind && <span class="pub"> · {s.kind}</span>}
+              {s.accessed && <span class="pub"> · accessed {s.accessed}</span>}
+              {s.note && <div class="pub" style="margin-top:2px;">{s.note}</div>}
+            </li>
+          ))}
+        </ol>
+      </section>
+    )
+  }
+
+  <script type="application/json" id="citation-data" set:html={JSON.stringify(citationData)} />
+
+  <script>
+    import { initCitationPopovers } from '../../scripts/citationPopover';
+    initCitationPopovers(document);
+  </script>
+</BaseLayout>
