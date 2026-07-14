@@ -81,16 +81,30 @@ Scaffold complete; pyramid + pages working. **Catalog reviewed & finalized in tw
 per-category deep-research validation). infra-serving cut as out-of-scope; many merges/
 re-tiers/adds. Full decision record in `docs/DECISIONS.md` (round-1 + the "DEEP-RESEARCH
 VALIDATION PASS" section); research findings in `docs/TECHNIQUE_REVIEW.md`. Level
-distribution L0=4, L1=14, L2=27, L3=32, L4=5. **1 technique fully researched** (prompt
-caching — but its OpenAI "50% off" figure is STALE, now ~90% on GPT-5.x; see DECISIONS.md
-MUST-FIX, still open). **Wave 1 (foundations) is DONE: all 18 L0+L1 techniques researched
-& published** (17 authored via one-subagent-per-technique against `docs/WAVE1_BRIEFS.md`,
-plus the original prompt-caching). The other **64 are stubs** (`status: planned`). Level
-distribution: **L0=4, L1=14, L2=27, L3=28, L4=9**. Next: Wave 2 (L2 advanced) per
-`docs/RESEARCH_PLAN.md`. Wave-1 process that worked: write a full brief per technique in a
-`docs/WAVE*_BRIEFS.md`, then one general-purpose subagent per technique (reads its brief +
-`docs/TEMPLATE.md` + the reference page, deep-researches, WebFetch-verifies every URL,
-writes the .md directly), then a clean rebuild + section/URL validation gate.
+distribution L0=4, L1=14, L2=27, L3=28, L4=9. **ALL FOUR WAVES DONE: 82 of 82 techniques
+researched & published — the catalog is complete (0 stubs).** Wave 1 (18 L0+L1), Wave 2 (27 L2),
+Wave 3 (28 L3), Wave 4 (9 L4) — each authored one-general-purpose-subagent-per-technique against
+`docs/WAVE{1,2,3,4}_BRIEFS.md`, each page with 5–10 WebFetch-verified primary sources and clean
+footnote/source citation sync, validated by a full `npm run build` (84 pages) + a citation-sync
+script + spot-checks of flagged/future-dated URLs. The **prompt-caching MUST-FIX is CLOSED**
+(OpenAI cached-input corrected 50%→~90% against OpenAI's live pricing docs; ProjectDiscovery
+7.6%→84.3% case study added; Anthropic multipliers re-verified).
+Freshness fixes applied during authoring: `model-routing/reasoning-token-budgeting` documents
+Gemini's current `thinking_level` interface (older integer `thinkingBudget` page retired); the
+fine-tuning pages carry the OpenAI-self-serve-FT-wind-down caveat (May 2026→Jan 2027);
+`agent-workflow/programmatic-tool-calling` frames the PTC timeline honestly (beta Nov 2025,
+dynamic-filtering GA Feb 2026) rather than a flat "GA Feb 2026". Two figures softened at the gate:
+`agent-workflow/workflow-decomposition` dropped an unconfirmable "61–94% of agentic cost" precise
+band to the defensible qualitative claim (source kept); several agents self-corrected inflated
+headline numbers (S-LoRA 30×→4×, LLMLingua 20×→2–10×). **Next: maintenance only** — prices/limits
+drift (revisit caching/batching/routing/model-choice pages periodically per `accessed:` dates), and
+re-grade tiers as the field matures. Nothing has been committed since the initial two commits.
+Process that worked (all 4 waves): write a full brief per technique in a `docs/WAVE*_BRIEFS.md`, then
+one general-purpose subagent per technique (reads its brief + `docs/TEMPLATE.md` + the reference
+page, deep-researches, WebFetch-verifies every URL, writes the .md directly, sets `status:
+published` + `maturityProvisional: false`), then a clean rebuild + citation/URL validation gate. Run
+subagents in concurrency-capped batches (~9–10) — session limits killed a few mid-run and their
+untouched stubs had to be detected (grep `status: planned` + line count) and re-launched.
 
 When applying future catalog changes: edit `taxonomy.mjs`, then either
 `node scripts/reconcile-content.mjs` (deletes orphaned/removed files) or — after re-tiering/

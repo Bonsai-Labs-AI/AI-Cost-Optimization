@@ -18,7 +18,7 @@ measurementMethods:
   - "Effective blended input price ($/M tokens) after cache discounts."
   - "Time-to-first-token (TTFT) latency reduction."
 status: published
-lastUpdated: "2026-06-24"
+lastUpdated: "2026-07-03"
 related:
   - "prompt-context/static-dynamic-prompt-separation"
   - "caching-reuse/cache-aware-agent-design"
@@ -45,17 +45,33 @@ sources:
     publisher: "OpenAI"
     year: 2024
     url: "https://openai.com/index/api-prompt-caching/"
-    accessed: "2026-06-24"
+    accessed: "2026-07-03"
     kind: blog
-    note: "Automatic 50% input discount on cached prefixes; up to 80% latency reduction; applies to prompts ≥1,024 tokens in 128-token increments."
+    note: "Automatic input discount on cached prefixes; up to 80% latency reduction; applies to prompts ≥1,024 tokens in 128-token increments. (2024 announcement launched at 50%; the discount has since deepened — see the current pricing docs.)"
   - id: openai-pc-docs
     title: "Prompt caching"
     publisher: "OpenAI API Docs"
     year: 2026
     url: "https://developers.openai.com/api/docs/guides/prompt-caching"
-    accessed: "2026-06-24"
+    accessed: "2026-07-03"
     kind: docs
-    note: "Automatic, no code change. Put static content first, variable content last. Cache cleared after 5–10 min idle, within 1 hour max."
+    note: "Automatic, no code change, no extra fee. Put static content first, variable content last. Reduces input token costs by up to 90% and latency by up to 80%. Cache cleared after 5–10 min idle, within 1 hour max."
+  - id: openai-pricing
+    title: "Pricing"
+    publisher: "OpenAI API Docs"
+    year: 2026
+    url: "https://developers.openai.com/api/docs/pricing"
+    accessed: "2026-07-03"
+    kind: pricing
+    note: "For the GPT-5 series, cached input tokens are priced at 0.1× the standard input rate (e.g. GPT-5.5 input $5/MTok vs. cached input $0.50/MTok) — a 90% discount, not the original 50%."
+  - id: projectdiscovery-pc
+    title: "How We Cut LLM Costs by 59% With Prompt Caching"
+    publisher: "ProjectDiscovery Blog"
+    year: 2026
+    url: "https://projectdiscovery.io/blog/how-we-cut-llm-cost-with-prompt-caching"
+    accessed: "2026-07-03"
+    kind: blog
+    note: "Their agent 'Neo' (20k-token system prompt, 20–40+ LLM steps/task) had a 7% cache hit rate because dynamic working memory lived inside the system prompt, invalidating the prefix nearly every step. Moving that dynamic content to a trailing user message raised the hit rate to 84% and cut overall LLM cost by 59%."
   - id: gemini-caching
     title: "Context caching"
     publisher: "Google — Gemini API Docs"
@@ -106,7 +122,7 @@ stacks — and time-to-first-token drops because the prefill work is already don
 This is one of the highest-leverage, lowest-risk optimizations available: on the major
 providers it is **near-zero engineering effort**, it does **not change model outputs**
 (the same tokens are processed; only billing and latency change), and the savings on a
-cache hit are large — **50% off input on OpenAI**, **90% off on Anthropic and Gemini 2.5+**.[^openai-pc-announce][^anthropic-pc][^gemini-caching]
+cache hit are large — **~90% off input on OpenAI (GPT-5.x), Anthropic, and Gemini 2.5+**.[^openai-pricing][^anthropic-pc][^gemini-caching]
 That combination is why it sits at **Level 1 (Basic Optimization)**: almost every product
 with a stable prompt prefix should be doing it.
 
@@ -126,12 +142,22 @@ important design rule follows directly:
 Putting a timestamp, a user name, or a request ID near the top of the prompt silently
 destroys the cache for everything below it.
 
+The payoff is concrete. Security-tooling company **ProjectDiscovery** ran its agent "Neo"
+(a **20,000-token** system prompt, 20–40+ LLM steps per task) at a dismal **7% cache hit
+rate** because dynamic working memory lived *inside* the system prompt and invalidated the
+prefix on nearly every step. Relocating that volatile content to a **trailing user
+message** — a pure static-first / volatile-last reordering, no logic change — raised the
+hit rate to **84%** and cut overall LLM cost by **~59%**.[^projectdiscovery-pc]
+
 ### Provider-by-provider
 
 - **OpenAI — automatic.** Caching is applied automatically to prompts **≥ 1,024 tokens**,
   growing in 128-token increments, with **no code changes and no extra cost to opt in**.
-  Cache reads are billed at **50% of the input price**; idle caches are evicted after
-  ~5–10 minutes (and within an hour).[^openai-pc-announce][^openai-pc-docs]
+  On the current GPT-5 series, cache reads are billed at **10% of the input price — a ~90%
+  discount** (e.g. GPT-5.5 input $5/MTok vs. cached $0.50/MTok), and OpenAI documents an
+  input-cost reduction of **up to 90%**. (The original 2024 launch discount was 50%; it has
+  since deepened.) Idle caches are evicted after ~5–10 minutes (and within an
+  hour).[^openai-pricing][^openai-pc-docs]
 
 - **Anthropic (Claude) — explicit breakpoints.** You mark cacheable spans with
   `cache_control` breakpoints. A **cache write costs 1.25×** the base input price (5-minute
@@ -207,6 +233,8 @@ the loop.[^anthropic-pc][^vllm-apc]
 [^anthropic-pricing]: Anthropic, "Pricing," Claude API Docs — <https://platform.claude.com/docs/en/about-claude/pricing>
 [^openai-pc-announce]: OpenAI, "Prompt Caching in the API," 2024 — <https://openai.com/index/api-prompt-caching/>
 [^openai-pc-docs]: OpenAI API Docs, "Prompt caching" — <https://developers.openai.com/api/docs/guides/prompt-caching>
+[^openai-pricing]: OpenAI API Docs, "Pricing" — <https://developers.openai.com/api/docs/pricing>
+[^projectdiscovery-pc]: ProjectDiscovery, "How We Cut LLM Costs by 59% With Prompt Caching," 2026 — <https://projectdiscovery.io/blog/how-we-cut-llm-cost-with-prompt-caching>
 [^gemini-caching]: Google, "Context caching," Gemini API Docs — <https://ai.google.dev/gemini-api/docs/caching>
 [^gemini-pricing]: Google, "Gemini Developer API pricing" — <https://ai.google.dev/gemini-api/docs/pricing>
 [^bedrock-pc]: Amazon Bedrock User Guide, "Prompt caching for faster model inference" — <https://docs.aws.amazon.com/bedrock/latest/userguide/prompt-caching.html>
