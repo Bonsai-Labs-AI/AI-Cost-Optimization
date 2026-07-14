@@ -63,8 +63,6 @@ const citationData = Object.fromEntries(
   <div class="meta-row">
     <Badge level={d.maturityLevel} title={lvl?.name} label={`Level ${d.maturityLevel} — ${lvl?.name}`} />
     <Badge label={cat?.label ?? d.category} />
-    {d.maturityProvisional && <Badge label="level: provisional" />}
-    {d.status && <Badge label={`status: ${d.status}`} />}
   </div>
 
   <div class="scorecard">

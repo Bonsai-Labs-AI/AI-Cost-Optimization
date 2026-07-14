@@ -20,7 +20,6 @@ const techniques = entries
   .sort((a, b) => a.title.localeCompare(b.title));
 
 const total = techniques.length;
-const researched = entries.filter((e) => e.data.status !== 'planned').length;
 ---
 
 <BaseLayout
@@ -33,9 +32,6 @@ const researched = entries.filter((e) => e.data.status !== 'planned').length;
       A maturity-model field guide to making AI products cheaper without sacrificing
       quality. {total} techniques across {CATEGORIES.length} categories, mapped to five
       levels of optimization maturity.
-    </p>
-    <p style="color:var(--text-faint); font-size:0.9rem;">
-      {researched} of {total} researched · the rest are stubs awaiting deep research.
     </p>
   </section>
 
