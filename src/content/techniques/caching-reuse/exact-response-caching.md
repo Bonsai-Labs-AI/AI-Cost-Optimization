@@ -49,7 +49,7 @@ sources:
     url: "https://docs.litellm.ai/docs/proxy/caching"
     accessed: "2026-07-02"
     kind: docs
-    note: "Default ttl 600s. Per-request controls: ttl, s-maxage, no-cache (skip check), no-store (don't cache), namespace. Redis/in-memory/s3/gcs/disk backends."
+    note: "Per-request controls: ttl (no built-in default — unset = no expiry until evicted; docs show 600s as an example), s-maxage, no-cache (skip check), no-store (don't cache), namespace. Redis/in-memory/s3/gcs/disk backends."
   - id: litellm-keys
     title: "Caching — In-Memory, Redis, s3, gcs, Redis Semantic Cache, Disk"
     publisher: "LiteLLM Docs"
@@ -146,7 +146,8 @@ three levers:
    anything else — a coarse but robust guard against unbounded staleness. Every managed
    layer centers on this: Portkey's `max_age` (min **60s**, max **90 days**, default **7
    days**),[^portkey-cache] Cloudflare's `cf-aig-cache-ttl` (min 60s, max one
-   month),[^cf-aig-cache] LiteLLM's `ttl` (default **600s**).[^litellm-cache] On a DIY
+   month),[^cf-aig-cache] and LiteLLM's per-entry `ttl` (no built-in default — unset means no
+   expiry until evicted; docs show `600s` as an example).[^litellm-cache] On a DIY
    store this is a native primitive — Redis `SET key value EX <seconds>` / `EXPIRE`, with
    TTL persisted and replicated.[^redis-expire] Pick the TTL from *how fast the underlying
    answer can change*, not from convenience.

@@ -75,7 +75,7 @@ sources:
     url: "https://arxiv.org/abs/2505.21700"
     accessed: "2026-07-02"
     kind: paper
-    note: "SPLADE retrieval across NarrativeQA/NQ/NewsQA/TechQA/COVID/DuReader/SQuAD: optimal chunk size is strongly dataset-dependent, and chunk overlap 'provides no measurable benefit' while raising indexing cost."
+    note: "Dense-embedding retrieval (stella_en_1.5B_v5, snowflake-arctic-embed-l-v2.0) across NarrativeQA/NQ/NewsQA/TechQA/COVID/DuReader/SQuAD: optimal chunk size is strongly dataset-dependent. (Its experiments were run without chunk overlap — it does not evaluate overlap.)"
   - id: firecrawl-chunking
     title: "Best Chunking Strategies for RAG (and LLMs) in 2026"
     publisher: "Firecrawl — Blog"
@@ -122,7 +122,7 @@ chunk size roughly doubles the tokens sent to the LLM per query. But smaller is 
 recall; chunks that are too large dilute the embedding and drag in irrelevant text.
 
 The honest answer is that the sweet spot depends on your corpus and queries. A multi-dataset
-study using SPLADE retrieval across NarrativeQA, Natural Questions, NewsQA, TechQA, and
+study using dense-embedding retrieval across NarrativeQA, Natural Questions, NewsQA, TechQA, and
 others found that **the ideal chunk size varies significantly from one dataset to the
 next** — there is no single winner.[^rethinking-chunksize] LlamaIndex's own tutorial makes
 the same point operationally: it sweeps 128 / 256 / 512 / 1,024 / 2,048-token chunks and
@@ -145,11 +145,12 @@ splitting a sentence or idea across a boundary. Conventional guidance is **10–
 chunks are both retrieved — sent to the LLM twice. That inflates index size, embedding cost,
 and retrieved-token volume in direct proportion to the overlap fraction.
 
-Recent evidence suggests overlap is often not worth paying for. The multi-dataset SPLADE
-analysis found that **chunk overlap "provides no measurable benefit" while only increasing
-indexing cost**.[^rethinking-chunksize] The practical rule: treat overlap as a *tunable
-parameter to justify against your own retrieval metrics*, not a default to copy — "don't
-assume overlap is always worth the storage trade-off."[^firecrawl-chunking] Where you *do*
+Overlap is often not worth paying for. Its cost — duplicated, re-embedded, re-retrieved
+tokens — is certain, while its benefit is not: practitioner guidance is to **"not assume
+overlap is always worth the storage trade-off,"** treating it as a *tunable parameter to
+justify against your own retrieval metrics* rather than a default to copy.[^firecrawl-chunking]
+(Notably, the multi-dataset chunk-size study above ran its experiments **without** any overlap
+at all and still reported strong retrieval.[^rethinking-chunksize]) Where you *do*
 need surrounding context, a cheaper alternative to blanket overlap is **chunk expansion**:
 index tight, non-overlapping chunks, then at retrieval time pull the immediate neighbours of
 a hit only when needed.[^pinecone-chunking]
@@ -207,8 +208,7 @@ relevant paragraph.[^llama-nodeparsers]
 The team builds a 300-question labelled eval set and sweeps configs. They find that
 **512-token recursive chunks with zero overlap** hold answer faithfulness and relevancy at
 the same bar while retrieving roughly **half the tokens per query**, and that dropping the
-20% overlap removes duplicated spans with no measurable recall loss — consistent with the
-multi-dataset finding that overlap adds cost without benefit.[^rethinking-chunksize] At a few
+20% overlap removes duplicated spans with no measurable recall loss on their eval set. At a few
 hundred thousand queries a month, halving retrieved context tokens is a direct, permanent cut
 to per-query generation cost, and the smaller non-overlapping index also lowers embedding and
 storage cost. Because every change was checked against the eval set, they can ship it without

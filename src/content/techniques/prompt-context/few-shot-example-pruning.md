@@ -52,7 +52,7 @@ sources:
     url: "https://developers.openai.com/api/docs/guides/prompt-guidance"
     accessed: "2026-07-02"
     kind: docs
-    note: "\"Start with the smallest prompt that passes your evals, and add blocks only when they fix a measured failure mode.\" The eval-driven, minimal-prompt principle behind empirical pruning."
+    note: "OpenAI's eval-driven prompt guidance: start from a prompt/tool set that works, then remove one group of instructions, examples, or tools at a time and rerun the same evals — the subtractive, eval-driven principle behind empirical pruning."
   - id: manyshot-icl
     title: "Many-Shot In-Context Learning"
     publisher: "arXiv:2404.11018 (NeurIPS 2024)"
@@ -107,9 +107,10 @@ The first question is which regime you are in:
 - **Reasoning / strong instruction-followers** (OpenAI o-series and GPT-5.x reasoning,
   Claude Opus/Sonnet 4.x with thinking). Default to **zero-shot**: write the
   instructions and the schema, run the eval, and add examples only if a *measured*
-  failure mode appears.[^openai-reasoning] This is the same minimal-prompt principle
-  OpenAI states generally: *"Start with the smallest prompt that passes your evals, and
-  add blocks only when they fix a measured failure mode."*[^openai-prompt-guidance]
+  failure mode appears.[^openai-reasoning] This mirrors OpenAI's own eval-driven prompt
+  guidance: start from a prompt and tool set that already works, then **remove** one group of
+  instructions, examples, or tools at a time and rerun the same evals to find what actually
+  earns its place.[^openai-prompt-guidance]
 - **Classic completion / lighter models.** Examples still pull real weight here, but
   Anthropic's own guidance caps the useful count low: **"Include 3–5 examples for best
   results."**[^anthropic-multishot] If a prompt has 15 examples, that is a strong prior

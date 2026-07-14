@@ -77,7 +77,7 @@ sources:
     title: "DeepInfra Pricing — Cheapest Serverless LLM Inference"
     publisher: "Price Per Token"
     year: 2026
-    url: "https://pricepertoken.com/endpoints/deepinfra"
+    url: "https://deepinfra.com/pricing"
     accessed: "2026-07-02"
     kind: pricing
     note: "Open-weight host pricing reference; illustrates that identical open-weight SKUs are offered well below flagship-host and full-precision list prices."
@@ -225,5 +225,5 @@ is a large, low-risk saving for the cost of a gateway config and one eval run.
 [^portkey-routing]: Portkey Documentation, "Combining Routing Strategies: Conditional, Load Balancing & Fallbacks" — <https://portkey.ai/docs/guides/use-cases/combining-routing-strategies>
 [^azure-faq]: Microsoft Learn, "Azure OpenAI frequently asked questions" — <https://learn.microsoft.com/en-us/azure/foundry-classic/openai/faq>
 [^bedrock-pricing]: Amazon Web Services, "Amazon Bedrock Pricing" — <https://aws.amazon.com/bedrock/pricing/>
-[^deepinfra-pricing]: Price Per Token, "DeepInfra Pricing — Cheapest Serverless LLM Inference" — <https://pricepertoken.com/endpoints/deepinfra>
+[^deepinfra-pricing]: DeepInfra, "Pricing" — <https://deepinfra.com/pricing>
 [^together-pricing]: AI Pricing Guru, "Together.ai API Pricing 2026 — All Models, Live Rates" — <https://www.aipricing.guru/together-pricing/>

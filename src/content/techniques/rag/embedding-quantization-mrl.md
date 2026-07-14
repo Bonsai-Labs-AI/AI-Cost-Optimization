@@ -161,8 +161,9 @@ MTEB.[^openai-embed-announce][^openai-embed-docs]
 
 Truncation is orthogonal to quantization — you can truncate to 512 dims **and** binarize —
 so the reductions multiply. One honest caveat: aggressive truncation has limits. Recent
-work finds embeddings tolerate truncation with little loss until you cut roughly **70%+** of
-the dimensions, at which point MRL-trained models keep a clear edge over naive truncation —
+work finds even non-MRL embeddings tolerate truncation with little loss until you cut roughly
+**70%** of the dimensions; MRL-trained models keep a *clear* edge specifically in the
+**heavy-truncation regime (past ~80% reduction)**, where naive truncation degrades sharply —
 so validate recall at your chosen dimension rather than assuming any vector truncates
 arbitrarily far.[^mrl-truncation-robustness]
 

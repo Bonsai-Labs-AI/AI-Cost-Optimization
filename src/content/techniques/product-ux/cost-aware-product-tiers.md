@@ -67,7 +67,7 @@ sources:
     url: "https://www.transputec.com/blogs/llm-api-security/"
     accessed: "2026-07-03"
     kind: blog
-    note: "Feb 2026: an exposed key ran up $82,314.44 in a single 24-hour window vs. a $180/mo baseline; 376% rise in AI credential theft Q4'25→Q1'26. Recommends hard spend caps, billing alerts, per-project keys, and application-level rate limiting as the mitigation."
+    note: "Feb 2026: a stolen Google Cloud API key ran up $82,314.44 in a single 24-hour window vs. a $180/mo baseline; 376% rise in AI credential theft Q4'25→Q1'26. Recommends hard spend caps, billing alerts, per-project keys, and application-level rate limiting as the mitigation."
   - id: vicarius-keys
     title: "8,000+ ChatGPT API keys exposed across GitHub & production sites"
     publisher: "Vicarius"
@@ -75,7 +75,7 @@ sources:
     url: "https://www.vicarius.io/articles/8-000-chatgpt-api-keys-exposed-across-github-production-sites"
     accessed: "2026-07-03"
     kind: blog
-    note: "8,000+ exposed OpenAI keys (5,000+ GitHub repos, 3,000+ production sites); attackers 'execute high-volume inference workloads under the victim's billing umbrella,' causing ruinous overnight bills."
+    note: "OpenAI keys exposed across 5,000+ GitHub repos and 3,000+ production sites; attackers 'execute high-volume inference workloads under the victim's billing umbrella,' causing ruinous overnight bills."
   - id: openrouter-free
     title: "Free LLM APIs in 2026: 13 Options Ranked and Compared"
     publisher: "OpenRouter Blog"
@@ -157,10 +157,10 @@ Free access is where uncontrolled cost concentrates, for two structural reasons:
    output, consume API cost, then churn before ever paying" — i.e. the free path was
    *funding churn*, not activation.[^revenuecat-margins]
 2. **A free/leaked credential is an attacker's dream.** This is not hypothetical:
-   researchers found **8,000+ exposed OpenAI keys** across 5,000+ GitHub repos and
-   3,000+ production sites, which attackers use to "execute high-volume inference
+   researchers found **OpenAI keys exposed across 5,000+ GitHub repos and 3,000+
+   production sites**, which attackers use to "execute high-volume inference
    workloads under the victim's billing umbrella."[^vicarius-keys] In one Feb-2026
-   case an exposed key ran up **$82,314.44 in a single 24-hour window** against a
+   case a single leaked cloud API key ran up **$82,314.44 in a 24-hour window** against a
    $180/month baseline, and credential theft targeting AI services rose **376%** quarter
    over quarter — with the standard mitigation being **hard spend caps and
    application-level rate limiting**.[^transputec-llmsec]

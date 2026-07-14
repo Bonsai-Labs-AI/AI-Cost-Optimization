@@ -100,8 +100,11 @@ a 20-step loop at 1,000 tokens/step produces ~**210,000** cumulative input token
 ~20,000 a per-step estimate suggests.[^augment-loop-cost] On top of that it runs a frontier
 model on trivial steps and can **wander, retry, and spiral** with no natural stopping point.
 The result is that agentic tasks routinely cost **5–25× more per task** than a non-agentic
-equivalent,[^techahead-inference] and model-token cost is the **dominant line item** in
-agentic systems — so per-step token count and model tier are exactly the levers to pull.[^faas-agentic]
+equivalent,[^techahead-inference] with model-token cost the **dominant line item** — each step
+re-sends a growing context to a frontier model.[^augment-loop-cost] So per-step token count and
+model tier are exactly the levers to pull, and optimizing that token flow is where the savings
+come from: one study of MCP-enabled agentic workflows reports ~66% lower cost and ~88% fewer
+input tokens from scheduling/decomposition.[^faas-agentic]
 
 This is **Level 3**: it is real engineering (orchestration code, per-step prompts, an eval
 harness to prove the workflow matches the agent), and the ROI is strongest at scale on a
@@ -153,7 +156,7 @@ Three effects compound in a monolithic agent, and decomposition attacks each:
    "pull field X," "pick a category" — pays frontier-model rates. In a workflow you assign
    the cheap model to the cheap steps and reserve the expensive model for the one or two
    steps that need reasoning.[^leanops-agent-cost] Because model tokens are the dominant cost
-   line in agentic systems,[^faas-agentic] this mix change is most of the win. (This is the per-step
+   line in agentic systems,[^augment-loop-cost] this mix change is most of the win. (This is the per-step
    application of *model right-sizing* and *dynamic model routing*.)
 
 3. **Bounded steps stop the spiral.** A fixed workflow has a known number of calls; it
@@ -196,7 +199,7 @@ model,[^leanops-agent-cost] and the step count is bounded so a bad site fails fa
 looping. On a task like this the reported wins line up: on the order of **3.5×** fewer tokens
 at equal correctness,[^cobol-orchestration] with far less run-to-run variance — and at
 tens of thousands of briefs/day that is the difference between a profitable feature and an
-unprofitable one, since LLM tokens are the dominant cost line.[^faas-agentic]
+unprofitable one, since LLM tokens are the dominant cost line.[^augment-loop-cost]
 
 ## Example Where It Would NOT Work
 

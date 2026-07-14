@@ -65,7 +65,7 @@ sources:
     url: "https://arxiv.org/abs/2508.12981"
     accessed: "2026-07-03"
     kind: paper
-    note: "Multi-agent planning incurs coordination/communication overhead; inter-agent message passing and repeated context sharing add token and latency cost that must be accounted for when comparing to a single agent."
+    note: "Multi-agent planning incurs coordination/communication overhead from inter-agent message passing and repeated context sharing; a shared-notebook + orchestrator design reached 25% vs 7.5% single-agent pass rate on TravelPlanner."
 ---
 
 ## Overview

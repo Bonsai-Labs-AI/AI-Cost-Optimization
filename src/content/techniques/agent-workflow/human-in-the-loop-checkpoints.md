@@ -71,7 +71,7 @@ sources:
     url: "https://leanopstech.com/blog/agentic-ai-cost-runaway-token-budget-2026/"
     accessed: "2026-07-02"
     kind: blog
-    note: "Agent loop resends accumulated context each step: ~3.2× a chatbot at 5 steps, >30× at 50 steps, >100× at 200 steps. Real runaway: one developer ran up $4,200 in API fees over a long weekend on an autonomous refactoring run. A ~30-second human approval on any job over ~$50 estimated cost prevents the surprise."
+    note: "Agent loop resends accumulated context each step: ~3.2× a chatbot at 5 steps, >30× at 50 steps, >100× at 200 steps. Real runaway: one developer ran up $4,200 in API fees over a long weekend on an autonomous refactoring run. Recommends automated budget caps (e.g. ~$50/day soft, ~$100/day hard) alongside human gates on expensive/irreversible actions."
 ---
 
 ## Overview

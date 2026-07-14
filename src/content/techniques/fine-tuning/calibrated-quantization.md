@@ -74,7 +74,7 @@ sources:
     url: "https://developers.redhat.com/articles/2024/10/17/we-ran-over-half-million-evaluations-quantized-llms"
     accessed: "2026-07-03"
     kind: benchmark
-    note: "500k+ evaluations on Llama 3.1 (8B/70B/405B). W8A8-INT and W8A8-FP recover >99% (v1) / ~99% (v2) of baseline accuracy; W4A16-INT recovers ~99.9% HumanEval / 98.9% HumanEval+. Speedups ~1.8× (8-bit) and ~2.4× (4-bit weight) in single-request latency."
+    note: "500k+ evaluations on Llama 3.1 (8B/70B/405B). W8A8-INT and W8A8-FP recover >99% (v1) / ~99% (v2) of baseline accuracy; W4A16-INT recovers ~99.9% HumanEval / 98.9% HumanEval+. Speedups ~1.8× (W8A8, multi-request server serving) and ~2.4× (W4A16, single-stream latency)."
   - id: vllm-quant
     title: "Quantization — Supported Hardware"
     publisher: "vLLM Documentation"
@@ -178,8 +178,9 @@ The payoff is memory → hardware → throughput → $/token:
    memory, letting **more tokens fit in memory → higher throughput and longer
    context.**[^vllm-fp8kv]
 2. **Throughput.** LLM decoding is memory-bandwidth-bound, so smaller weights stream faster.
-   Red Hat/Neural Magic's **500k-evaluation** study measured **~1.8× speedup for 8-bit** and
-   **~2.4× for 4-bit-weight** schemes in single-request latency.[^redhat-eval] Hugging Face's
+   Red Hat/Neural Magic's **500k-evaluation** study measured **~1.8× speedup for 8-bit (W8A8)**
+   in multi-request server serving and **~2.4× for 4-bit-weight (W4A16)** in single-stream
+   latency.[^redhat-eval] Hugging Face's
    Mistral-7B AWQ benchmark shows decode throughput rising from **~31–38 to ~80–106
    tokens/s** with fused kernels, at **lower VRAM** (e.g. 4.50→4.00 GB).[^hf-awq]
 3. **Accuracy retention (the tradeoff).** The same study is the strongest quality evidence:

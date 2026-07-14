@@ -73,7 +73,7 @@ sources:
     url: "https://www.together.ai/pricing"
     accessed: "2026-07-03"
     kind: pricing
-    note: "Llama 3.3 70B ~$1.04/1M in & out (serverless); dedicated 1×H100 80GB endpoint $6.49/hr."
+    note: "Llama 3.3 70B ~$1.04/1M in & out (serverless); dedicated 1×H100 80GB endpoint $5.49/hr."
   - id: deepinfra-pricing
     title: "Pricing"
     publisher: "DeepInfra"
@@ -178,7 +178,7 @@ prices many multiples higher. That is a variable, zero-ops cost you can adopt to
 route to per-request; see *Provider Routing* and *Dynamic Model Routing*).
 
 Self-hosting only earns its keep when you climb **past** the managed-open price too. A
-rough gate: Together's own **dedicated 1×H100 endpoint is $6.49/hr** ≈ $4,700/mo per
+rough gate: Together's own **dedicated 1×H100 endpoint is $5.49/hr** ≈ $4,000/mo per
 GPU[^together-pricing] — you must saturate that GPU with enough tokens that its amortized
 per-token cost beats the ~$0.10–$1.04/1M serverless open-weight rate, or the managed API
 wins outright. In practice that means: **open-weight via API by default; self-host only at

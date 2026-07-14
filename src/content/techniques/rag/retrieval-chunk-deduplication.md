@@ -41,7 +41,7 @@ sources:
     title: "maximal_marginal_relevance (utility)"
     publisher: "LangChain — Python Reference"
     year: 2026
-    url: "https://reference.langchain.com/python/langchain-mongodb/utils/maximal_marginal_relevance"
+    url: "https://python.langchain.com/api_reference/community/vectorstores/langchain_community.vectorstores.utils.maximal_marginal_relevance.html"
     accessed: "2026-07-02"
     kind: docs
     note: "lambda_mult is the relevance/diversity trade-off, default 0.5; 0 = maximum diversity, 1 = minimum diversity. Selects documents both relevant and diverse."
@@ -234,7 +234,7 @@ large fraction of retrieved tokens, so a small filter recovers real savings on e
   off — reducing K or reranking is the better lever.
 
 [^mmr-sigir98]: Carbonell & Goldstein, "The Use of MMR, Diversity-Based Reranking…," 1998 — <https://aclanthology.org/X98-1025.pdf>
-[^langchain-mmr]: LangChain Python Reference, "maximal_marginal_relevance" — <https://reference.langchain.com/python/langchain-mongodb/utils/maximal_marginal_relevance>
+[^langchain-mmr]: LangChain Python API Reference, "maximal_marginal_relevance" — <https://python.langchain.com/api_reference/community/vectorstores/langchain_community.vectorstores.utils.maximal_marginal_relevance.html>
 [^llamaindex-mmr]: LlamaIndex Docs, "Maximum Marginal Relevance Retrieval" — <https://developers.llamaindex.ai/python/examples/vector_stores/simpleindexdemommr/>
 [^rag-semantic-dedup]: dakshjain-1616, "RAG with Retrieval-Time Semantic Deduplication," GitHub — <https://github.com/dakshjain-1616/RAG-with-Retrieval-Time-Semantic-Deduplication>
 [^milvus-minhash-docs]: Milvus Documentation, "MINHASH_LSH" — <https://milvus.io/docs/minhash-lsh.md>
