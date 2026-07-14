@@ -22,8 +22,8 @@ const techByLevel = (lvl: number) =>
 
 // Top (L4, narrow apex) → bottom (L0, wide base).
 const tiers = [...MATURITY_LEVELS].sort((a, b) => b.level - a.level);
-// Band width grows toward the base so the stacked left column reads as a pyramid.
-const widthFor = (lvl: number) => 52 + (4 - lvl) * 12; // L4=52% … L0=100%
+// Each level row narrows toward the apex so the stacked rows read as a pyramid.
+const rowWidthFor = (lvl: number) => 64 + (4 - lvl) * 9; // L4=64% … L0=100%
 const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.short ?? slug;
 ---
 
@@ -38,9 +38,13 @@ const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.shor
       tiers.map((tier) => {
         const items = techByLevel(tier.level);
         return (
-          <div class={`pyr-row pyr-l${tier.level}`} data-level={tier.level}>
+          <div
+            class={`pyr-row pyr-l${tier.level}`}
+            data-level={tier.level}
+            style={`--rowmax:${rowWidthFor(tier.level)}%`}
+          >
             <div class="pyr-band-cell">
-              <div class="pyr-band" style={`--w:${widthFor(tier.level)}%`}>
+              <div class="pyr-band">
                 <span class="pyr-tag">L{tier.level}</span>
                 <span class="pyr-name">{tier.name}</span>
                 <span class="pyr-tagline">{tier.tagline}</span>
@@ -109,12 +113,17 @@ const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.shor
   .chip-active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
 
   .pyr-grid { display: flex; flex-direction: column; gap: 10px; }
-  .pyr-row { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; }
+  /* Each row is centered and capped at a per-level max-width (--rowmax); rows narrow
+     toward the apex so the whole stack reads as a pyramid silhouette. */
+  .pyr-row {
+    display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start;
+    width: 100%; max-width: var(--rowmax, 100%); margin-inline: auto;
+    transition: max-width 0.2s ease;
+  }
 
-  /* Left column: a colored band whose width grows toward the base → pyramid silhouette. */
   .pyr-band-cell { display: flex; justify-content: center; }
   .pyr-band {
-    width: var(--w);
+    width: 100%;
     min-height: 92px;
     border-radius: 10px;
     border: 1px solid var(--tier-color);
@@ -164,9 +173,9 @@ const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.shor
   .pyramid-hint { text-align: center; color: var(--text-faint); font-size: 0.85rem; margin: 22px 0 0; }
 
   @media (max-width: 720px) {
-    .pyr-row { grid-template-columns: 1fr; gap: 10px; }
+    .pyr-row { grid-template-columns: 1fr; gap: 10px; max-width: none; }
     .pyr-band-cell { justify-content: flex-start; }
-    .pyr-band { width: 100% !important; min-height: 0; }
+    .pyr-band { min-height: 0; }
   }
 
   /* ---- Modal ---- */
