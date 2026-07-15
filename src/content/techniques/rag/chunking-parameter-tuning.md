@@ -25,7 +25,6 @@ related:
   - "rag/reducing-retrieved-chunk-count"
   - "rag/retrieval-chunk-deduplication"
   - "rag/reranking-before-generation"
-  - "visibility-measurement/quality-cost-evaluation-suite"
 sources:
   - id: llama-chunksize
     title: "Evaluating the Ideal Chunk Size for a RAG System using LlamaIndex"

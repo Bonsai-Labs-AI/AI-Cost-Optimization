@@ -1,13 +1,13 @@
 ---
 title: "Calibrated Quantization (GPTQ / AWQ / QAT)"
 category: fine-tuning
-maturityLevel: 4
+maturityLevel: 3
 maturityProvisional: false
 shortDescription: "Compress a self-hosted model's weights (and/or activations) to INT8/INT4/FP8 using calibration data — GPTQ/AWQ/SmoothQuant post-training, or QAT for the hardest low-bit cases — so it serves on fewer/cheaper GPUs at higher throughput and lower $/token, with minimal quality loss."
 effort: High
 gain: High
 riskToQuality: Medium
-effortWhy: "Post-training AWQ/GPTQ is roughly L3 effort (a calibration run); QAT — retraining with quantization in the loop — is the L4 piece, and validating quality retention at scale is real work."
+effortWhy: "Post-training AWQ/GPTQ is roughly L3 effort (a calibration run); QAT — retraining with quantization in the loop — is the harder L3 piece, and validating quality retention at scale is real work."
 gainWhy: "Halving or quartering weight memory lets the same model run on fewer/smaller GPUs at ~1.8–2.4× throughput, directly cutting self-hosted $/token — but only when you already operate your own serving stack."
 riskWhy: "Under-calibrated or too-aggressive quantization (especially W4 activations or 2-bit) degrades quality; large models tolerate it better than small ones, so it needs per-task eval."
 detectionSignals:
@@ -120,11 +120,11 @@ self-hosted **$/token**.
 
 This is distinct from the serving-side, runtime KV-cache and activation tricks a serving
 engine applies automatically — this page is about **producing a quantized model artifact**
-you then deploy. It is squarely a **Level 4** technique because it *only* pays off once you
+you then deploy. It is squarely a **Level 3** technique because it *only* pays off once you
 own the serving stack (pairs with *Local Model Deployment*), and because the hardest cases
 require **quantization-aware training (QAT)** — retraining with quantization in the loop.
 The honest split: **post-training AWQ/GPTQ/SmoothQuant is roughly L3 effort** (a calibration
-run over an existing checkpoint); **QAT is the L4 piece**, reserved for when post-training
+run over an existing checkpoint); **QAT is the most demanding L3 piece**, reserved for when post-training
 quantization has broken quality and you need to recover it.[^llm-qat]
 
 ## Detailed Approach & Techniques
@@ -155,7 +155,7 @@ samples) through the model once, and the calibration is where "calibrated" quant
 earns its name — the KV-cache/FP8 flows explicitly recommend **dataset-based calibration
 over random-token calibration** for quality.[^vllm-fp8kv]
 
-### The L4 piece: Quantization-Aware Training (QAT)
+### The hardest L3 piece: Quantization-Aware Training (QAT)
 
 PTQ has a ceiling. As LLM-QAT documents, post-training methods "perform well down to 8-bits"
 but **"break down at lower bit precision."**[^llm-qat] When you need **4-bit (or lower)
@@ -165,7 +165,7 @@ weights *learn* to be robust to rounding. **LLM-QAT** makes this practical with 
 distillation (the model teaches itself from its own generations, so you don't need the
 original training corpus), quantizing weights/activations/KV cache down to 4-bit with **large
 improvements over training-free methods in the low-bit regime.**[^llm-qat] QAT costs training
-compute and time — that's the L4 effort — so it's justified only when post-training AWQ/GPTQ
+compute and time — that's the costliest L3 effort — so it's justified only when post-training AWQ/GPTQ
 has visibly degraded quality and the volume justifies the extra work.
 
 ### The cost mechanism, quantified
@@ -213,7 +213,7 @@ per-GPU throughput compounds into a large cut in **$/token**. On newer **H100/L4
 they'd instead pick **FP8 (W8A8)**, using the FP8 tensor cores their FP16 deployment left
 idle, plus **FP8 KV-cache** quantization to pack more concurrent requests into
 memory.[^vllm-quant][^vllm-fp8kv] If a first pass to INT4 nicks quality on a critical subtask,
-**QAT** recovers it — the L4 escalation worth the retraining cost at this volume.[^llm-qat]
+**QAT** recovers it — the deeper L3 escalation worth the retraining cost at this volume.[^llm-qat]
 
 ## Example Where It Would NOT Work
 
@@ -232,7 +232,7 @@ memory.[^vllm-quant][^vllm-fp8kv] If a first pass to INT4 nicks quality on a cri
   QAT) beats a cheap-but-broken INT4.
 - **Reaching for QAT when AWQ already suffices.** If post-training AWQ/GPTQ already holds
   quality (the common case at 8-bit and often 4-bit on large models), the QAT retraining is
-  wasted L4 effort — stop at the L3-effort post-training pass.[^redhat-eval]
+  wasted effort — stop at the post-training pass.[^redhat-eval]
 
 [^gptq]: Frantar, Ashkboos, Hoefler, Alistarh, "GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers," ICLR 2023 — <https://arxiv.org/abs/2210.17323>
 [^awq]: Lin, Tang, Tang, Yang, et al., "AWQ: Activation-aware Weight Quantization for LLM Compression and Acceleration," MLSys 2024 — <https://arxiv.org/abs/2306.00978>

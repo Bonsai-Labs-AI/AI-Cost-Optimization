@@ -25,7 +25,6 @@ measurementMethods:
 status: published
 lastUpdated: "2026-06-29"
 related:
-  - "visibility-measurement/budget-limits-guardrails"
   - "product-ux/agent-scope-confirmation"
   - "agent-workflow/tool-use-minimization"
 sources:

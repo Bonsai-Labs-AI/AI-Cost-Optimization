@@ -1,13 +1,13 @@
 ---
 title: "Prompt Cleanup"
 category: prompt-context
-maturityLevel: 0
+maturityLevel: 1
 maturityProvisional: false
 shortDescription: "Strip accreted boilerplate, dead instructions, redundant restatements, stale few-shot examples, and unused tool descriptions from your prompts — including the system prompt — so you stop paying full input price for tokens that add no signal."
 effort: Low
 gain: Medium
 riskToQuality: Low
-effortWhy: "L0 hygiene with no infrastructure — just read the prompts you already send and delete the no-signal tokens."
+effortWhy: "L1 hygiene with no infrastructure — just read the prompts you already send and delete the no-signal tokens."
 gainWhy: Medium because cleanup removes obvious waste cheaply but is not a structural win like model right-sizing or batching.
 riskWhy: Low because each pass is gated on an unchanged held-out eval score, so removed tokens are proven to be waste.
 detectionSignals:
@@ -100,7 +100,7 @@ and instruction scaffolding anywhere in the request.
 The 2026 framing for this is Anthropic's **context engineering**: the goal is to "find the
 *smallest possible* set of high-signal tokens that maximize the likelihood of some desired
 outcome," because models draw on a finite **attention budget** when parsing context.[^anthropic-ce]
-Cleanup is the L0, manual front edge of that idea — no infrastructure, just deletion.
+Cleanup is the L1, manual front edge of that idea — no infrastructure, just deletion.
 
 We score the gain **Medium** and want to be honest about it: cleanup is hygiene, not a
 structural win. It will not 10× your bill the way model right-sizing or batch processing

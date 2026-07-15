@@ -1,7 +1,7 @@
 ---
 title: "Context Window Budgeting"
 category: prompt-context
-maturityLevel: 2
+maturityLevel: 1
 maturityProvisional: false
 shortDescription: "Set an explicit per-call token budget and allocate it across components (system, history, retrieved docs, tools) with hard caps and a trimming policy, instead of letting context grow until it hits the model max."
 effort: Medium
@@ -22,7 +22,7 @@ lastUpdated: "2026-07-02"
 related:
   - "prompt-context/long-context-avoidance"
   - "prompt-context/structured-context-packing"
-  - "prompt-context/conversation-summarization"
+  - "prompt-context/context-reduction"
   - "rag/reducing-retrieved-chunk-count"
   - "caching-reuse/prompt-caching-prefix-caching"
 sources:
@@ -112,9 +112,9 @@ Anthropic frames the same phenomenon as **context rot** ("as the number of token
 context window increases, the model's ability to accurately recall information from that
 context decreases") and a finite **attention budget**, concluding that good context
 engineering means finding "the smallest possible set of high-signal tokens."[^anthropic-context-eng]
-So an unbudgeted window costs more *and* can answer worse. It sits at **Level 2** because
-doing it well requires per-component accounting plus a trimming policy validated against an
-eval bar — deliberate engineering, not a config toggle.
+So an unbudgeted window costs more *and* can answer worse. It sits at **Level 1** because
+the core practice — set a budget, enforce per-component caps, apply a trimming policy — is
+foundational hygiene that any team can adopt with off-the-shelf primitives.
 
 ## Detailed Approach & Techniques
 

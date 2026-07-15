@@ -1,7 +1,7 @@
 ---
 title: "Context Offloading / Filesystem-as-Memory"
 category: prompt-context
-maturityLevel: 3
+maturityLevel: 2
 maturityProvisional: false
 shortDescription: "Move an agent's working state out of the live context window into an external store (files, a scratchpad, a memory tool) and pull back only what's needed per step, instead of re-sending the whole accumulated transcript every turn."
 effort: Medium
@@ -22,11 +22,11 @@ measurementMethods:
 status: published
 lastUpdated: "2026-07-03"
 related:
-  - "prompt-context/conversation-summarization"
-  - "prompt-context/context-pruning"
+  - "prompt-context/context-reduction"
+  - "prompt-context/context-reduction"
   - "caching-reuse/cache-aware-agent-design"
-  - "agent-workflow/state-compression-for-agents"
-  - "agent-workflow/reusable-memory-artifact-store"
+  - "agent-workflow/agent-memory-management"
+  - "agent-workflow/agent-memory-management"
 sources:
   - id: anthropic-memory
     title: "Memory tool"
@@ -112,7 +112,7 @@ In Anthropic's own 100-turn web-search evaluation, clearing stale tool results f
 **cut token consumption by 84%** while letting the agent finish work that would otherwise
 have failed from context exhaustion; pairing that clearing with a memory tool to preserve
 what mattered **improved task performance by 39%** over baseline.[^anthropic-context-mgmt]
-It sits at **Level 3** because doing it well is real engineering — an external store, a
+It sits at **L2** because doing it well is real engineering — an external store, a
 read/write protocol, retrieval logic, and the judgment about *what* to offload and *when*
 to read it back — not a config flag.
 

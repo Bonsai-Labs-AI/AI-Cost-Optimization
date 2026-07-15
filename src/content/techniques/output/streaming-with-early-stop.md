@@ -21,7 +21,7 @@ status: published
 lastUpdated: "2026-07-02"
 related:
   - "output/output-length-control"
-  - "output/max-token-policies"
+  - "output/output-length-control"
   - "model-routing/reasoning-token-budgeting"
   - "output/structured-outputs"
 sources:

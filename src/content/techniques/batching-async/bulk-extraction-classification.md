@@ -25,8 +25,8 @@ related:
   - "batching-async/batch-api-usage"
   - "model-routing/model-right-sizing"
   - "output/structured-outputs"
-  - "fine-tuning/task-specific-classifiers"
-  - "fine-tuning/task-specific-extractors"
+  - "fine-tuning/task-specific-lightweight-models"
+  - "fine-tuning/task-specific-lightweight-models"
   - "caching-reuse/prompt-caching-prefix-caching"
 sources:
   - id: anthropic-batch

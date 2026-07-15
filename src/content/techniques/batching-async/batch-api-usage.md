@@ -24,7 +24,7 @@ status: published
 lastUpdated: "2026-06-29"
 related:
   - "caching-reuse/prompt-caching-prefix-caching"
-  - "batching-async/latency-tiered-processing"
+  - "batching-async/deferred-and-speculative-generation"
   - "batching-async/bulk-extraction-classification"
 sources:
   - id: openai-batch

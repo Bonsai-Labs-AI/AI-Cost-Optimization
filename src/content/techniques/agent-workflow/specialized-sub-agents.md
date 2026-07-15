@@ -1,7 +1,7 @@
 ---
 title: "Specialized Sub-Agents"
 category: agent-workflow
-maturityLevel: 4
+maturityLevel: 3
 maturityProvisional: false
 shortDescription: "Decompose a task across purpose-built sub-agents — each with its own context, tools, and (often) a right-sized model — coordinated by an orchestrator; a net cost win only when work genuinely parallelizes or cheap sub-agents offset the ~15× token multiplier, and a cost sink otherwise."
 effort: High
@@ -22,7 +22,7 @@ lastUpdated: "2026-07-03"
 related:
   - "agent-workflow/workflow-decomposition"
   - "agent-workflow/programmatic-tool-calling"
-  - "agent-workflow/state-compression-for-agents"
+  - "agent-workflow/agent-memory-management"
   - "model-routing/dynamic-model-routing"
 sources:
   - id: anthropic-multiagent
@@ -78,7 +78,7 @@ It is the most autonomous, most flexible end of agent design, and it is genuinel
 powerful for open-ended work that a single agent cannot hold in one context.
 
 But as a **cost** technique it is dangerous, and honesty about that is the entire point
-of putting it at **Level 4**. Anthropic's own production numbers are the headline: in
+of putting it at **Level 3**. Anthropic's own production numbers are the headline: in
 their multi-agent research system, "agents typically use about 4× more tokens than chat
 interactions, and multi-agent systems use about 15× more tokens as chats."[^anthropic-multiagent]
 That 15× multiplier means a multi-agent design **starts ~15× more expensive per task**
@@ -158,7 +158,7 @@ just burns tokens.
 ### When to prefer a deterministic workflow instead
 
 If the task is actually a **fixed pipeline** — the same ordered steps every time — a
-deterministic `workflow-decomposition` (L3) is almost always cheaper: it captures the
+deterministic `workflow-decomposition` (L2) is almost always cheaper: it captures the
 "specialized roles, small context per step" benefit *without* an autonomous
 orchestrator's exploratory token overhead or the 15× multiplier. The LangChain guidance
 maps to the same rule from the other side: "for simpler cases with just a few tools, use a

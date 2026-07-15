@@ -23,7 +23,6 @@ measurementMethods:
 status: published
 lastUpdated: "2026-06-29"
 related:
-  - "visibility-measurement/quality-cost-evaluation-suite"
   - "model-routing/dynamic-model-routing"
   - "model-routing/llm-cascades"
 sources:

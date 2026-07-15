@@ -1,7 +1,7 @@
 ---
 title: "Programmatic Tool Calling (Code Execution with MCP)"
 category: agent-workflow
-maturityLevel: 4
+maturityLevel: 3
 maturityProvisional: false
 shortDescription: "Have the agent write code that calls tools as APIs inside a sandbox — intermediate tool results stay in the sandbox and only the filtered final answer returns to context — instead of round-tripping every tool call and its full result through the model's window."
 effort: High
@@ -22,7 +22,7 @@ lastUpdated: "2026-07-03"
 related:
   - "agent-workflow/tool-use-minimization"
   - "agent-workflow/workflow-decomposition"
-  - "agent-workflow/state-compression-for-agents"
+  - "agent-workflow/agent-memory-management"
   - "agent-workflow/specialized-sub-agents"
 sources:
   - id: anthropic-cewmcp
@@ -99,7 +99,7 @@ transcript from Google Drive, attach it to Salesforce), loading all tool definit
 routing intermediate results through context cost **~150,000 tokens**; the code-execution
 approach cut that to **~2,000 tokens — a 98.7% reduction**.[^anthropic-cewmcp] Because
 intermediate-result tokens are frequently the *dominant* line item in an agent's bill,
-this is one of the highest-leverage cost levers available — but it sits at **Level 4**
+this is one of the highest-leverage cost levers available — but it sits at **Level 3**
 because it demands a real code-execution runtime and a model good enough to write correct
 orchestration code, and it is incompatible with several standard tool-use controls.
 
@@ -181,8 +181,8 @@ filtering rollout lifted BrowseComp accuracy from **33.3%→46.6%** (Sonnet 4.6)
 **Scale gate.** PTC pays when tool-result tokens dominate the bill — many sequential
 calls, large intermediates that get filtered, real data transformations. Below that (a
 one-shot single tool call, tiny results), the sandbox and code-writing overhead aren't
-worth it: the cheaper L2 lever is **tool-use minimization** (fewer, coarser-grained
-tools), and for a *fixed* pipeline a deterministic **workflow decomposition** (L3) beats
+worth it: the cheaper L1 lever is **tool-use minimization** (fewer, coarser-grained
+tools), and for a *fixed* pipeline a deterministic **workflow decomposition** (L2) beats
 letting the model write orchestration code at all.
 
 ## Example Where It Works
@@ -208,7 +208,7 @@ returns a small JSON object the model then summarizes. There is no loop, no larg
 intermediate to filter, and no chain of dependent calls: the single result is small and
 enters context exactly once. Wrapping this in a code-execution sandbox adds a container
 dependency, the risk that the model writes buggy Python, and no offsetting token saving —
-plain tool calling is strictly simpler and cheaper here. Tool-use minimization (L2) is the
+plain tool calling is strictly simpler and cheaper here. Tool-use minimization (L1) is the
 right lever if anything.
 
 Two more mismatches make PTC net-negative:
@@ -218,7 +218,7 @@ Two more mismatches make PTC net-negative:
   incompatible with programmatic calling — you'd have to give up the guardrails that
   keep the task correct.[^anthropic-ptc-docs]
 - **A fixed, deterministic pipeline.** If the sequence of tool calls is known and stable,
-  hand-writing it as a **workflow** (L3) is cheaper and more reliable than paying a
+  hand-writing it as a **workflow** (L2) is cheaper and more reliable than paying a
   frontier model to regenerate orchestration code — and it avoids the code-correctness
   failure mode. And note savings aren't guaranteed even in-profile: on the same benchmark,
   filtering-code overhead pushed price-weighted tokens *up* for one model while cutting

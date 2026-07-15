@@ -15,72 +15,64 @@ interface Props {
 }
 const { techniques } = Astro.props;
 
-const techByLevel = (lvl: number) =>
-  techniques
-    .filter((t) => t.maturityLevel === lvl)
-    .sort((a, b) => a.title.localeCompare(b.title));
-
-// Top (L4, narrow apex) → bottom (L0, wide base).
-const tiers = [...MATURITY_LEVELS].sort((a, b) => b.level - a.level);
-// Each level row narrows toward the apex so the stacked rows read as a pyramid.
-const rowWidthFor = (lvl: number) => 64 + (4 - lvl) * 9; // L4=64% … L0=100%
-const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.short ?? slug;
+const cellTechs = (lvl: number, cat: string) =>
+  techniques.filter((t) => t.maturityLevel === lvl && t.category === cat);
 ---
 
-<section class="pyramid">
-  <div class="pyramid-filters" id="cat-filters">
+<section class="matrix">
+  <div class="matrix-filters" id="cat-filters">
     <button class="chip chip-active" data-cat="all">All categories</button>
     {CATEGORIES.map((c) => <button class="chip" data-cat={c.slug}>{c.short}</button>)}
   </div>
 
-  <div class="pyr-grid">
-    {
-      tiers.map((tier) => {
-        const items = techByLevel(tier.level);
-        return (
-          <div
-            class={`pyr-row pyr-l${tier.level}`}
-            data-level={tier.level}
-            style={`--rowmax:${rowWidthFor(tier.level)}%`}
-          >
-            <div class="pyr-band-cell">
-              <div class="pyr-band">
-                <span class="pyr-tag">L{tier.level}</span>
-                <span class="pyr-name">{tier.name}</span>
-                <span class="pyr-tagline">{tier.tagline}</span>
-                <span class="pyr-count">{items.length} techniques</span>
-              </div>
-            </div>
-            <div class="pyr-techs">
-              <p class="pyr-desc">{tier.description}</p>
-              <div class="chip-cloud">
-                {items.map((t) => (
-                  <button
-                    class={`tech-chip${t.status === 'planned' || !t.status ? ' is-planned' : ''}`}
-                    data-href={t.href}
-                    data-id={`${t.category}/${t.slug}`}
-                    data-cat={t.category}
-                    title={t.shortDescription}
-                  >
-                    <span class="tech-dot" />
-                    <span class="tech-chip-title">{t.title}</span>
-                    <span class="tech-chip-cat">{catShort(t.category)}</span>
-                  </button>
-                ))}
-                <p class="chip-empty" hidden>No techniques in this category at this level.</p>
-              </div>
-            </div>
-          </div>
-        );
-      })
-    }
+  <div class="matrix-scroll">
+    <table class="matrix-table" id="matrix-table">
+      <thead>
+        <tr>
+          <th class="corner-cell"></th>
+          {CATEGORIES.map((c) => (
+            <th class="col-header" data-cat={c.slug}>
+              <span class="col-label">{c.short}</span>
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {MATURITY_LEVELS.map((tier) => (
+          <tr data-level={tier.level}>
+            <td class={`level-cell level-l${tier.level}`}>
+              <span class="level-tag">L{tier.level}</span>
+              <span class="level-name">{tier.name}</span>
+              <span class="level-tagline">{tier.tagline}</span>
+            </td>
+            {CATEGORIES.map((cat) => {
+              const items = cellTechs(tier.level, cat.slug);
+              return (
+                <td class="tech-cell" data-cat={cat.slug}>
+                  {items.map((t) => (
+                    <button
+                      class={`tech-chip level-l${tier.level}${t.status === 'planned' || !t.status ? ' is-planned' : ''}`}
+                      data-href={t.href}
+                      data-id={`${t.category}/${t.slug}`}
+                      data-cat={t.category}
+                      title={t.shortDescription}
+                    >
+                      <span class="tech-dot" />
+                      <span class="tech-chip-title">{t.title}</span>
+                    </button>
+                  ))}
+                  {items.length === 0 && <span class="empty-cell">—</span>}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   </div>
-  <p class="pyramid-hint">
-    Base = obvious waste, apex = near-frontier. Click any technique to open it.
-  </p>
 </section>
 
-<!-- Technique modal: loads the technique page content on click, no navigation. -->
+<!-- Technique modal -->
 <div class="modal-overlay" id="tech-modal" hidden>
   <div class="modal-backdrop" data-close></div>
   <div class="modal-panel" role="dialog" aria-modal="true" aria-label="Technique detail">
@@ -101,9 +93,10 @@ const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.shor
 />
 
 <style>
-  .pyramid { margin: 8px 0 8px; }
+  .matrix { margin: 8px 0 8px; }
 
-  .pyramid-filters { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin: 0 0 22px; }
+  /* ---- Category filter chips ---- */
+  .matrix-filters { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; margin: 0 0 20px; }
   .chip {
     font-size: 0.8rem; padding: 5px 11px; border-radius: 999px; cursor: pointer;
     border: 1px solid var(--border-strong); background: var(--bg-elev); color: var(--text-dim);
@@ -112,71 +105,87 @@ const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.shor
   .chip:hover { color: var(--text); }
   .chip-active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
 
-  .pyr-grid { display: flex; flex-direction: column; gap: 10px; }
-  /* Each row is centered and capped at a per-level max-width (--rowmax); rows narrow
-     toward the apex so the whole stack reads as a pyramid silhouette. */
-  .pyr-row {
-    display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start;
-    width: 100%; max-width: var(--rowmax, 100%); margin-inline: auto;
-    transition: max-width 0.2s ease;
-  }
+  /* ---- Scrollable table wrapper ---- */
+  .matrix-scroll { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border-strong); }
 
-  .pyr-band-cell { display: flex; justify-content: center; }
-  .pyr-band {
+  /* ---- Table skeleton ---- */
+  .matrix-table {
+    border-collapse: collapse;
     width: 100%;
-    min-height: 92px;
-    border-radius: 10px;
-    border: 1px solid var(--tier-color);
-    background: color-mix(in srgb, var(--tier-color) 12%, var(--bg-elev));
-    box-shadow: inset 4px 0 0 var(--tier-color);
-    padding: 12px 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    transition: box-shadow 0.15s, transform 0.15s;
+    min-width: 900px;
+    table-layout: fixed;
   }
-  .pyr-l0 .pyr-band { --tier-color: var(--l0); }
-  .pyr-l1 .pyr-band { --tier-color: var(--l1); }
-  .pyr-l2 .pyr-band { --tier-color: var(--l2); }
-  .pyr-l3 .pyr-band { --tier-color: var(--l3); }
-  .pyr-l4 .pyr-band { --tier-color: var(--l4); }
-  .pyr-tag { font-family: var(--mono); font-size: 0.78rem; font-weight: 700; color: var(--tier-color); }
-  .pyr-name { font-weight: 700; font-size: 1.04rem; line-height: 1.2; }
-  .pyr-tagline { color: var(--text-dim); font-size: 0.82rem; }
-  .pyr-count { color: var(--text-faint); font-size: 0.75rem; margin-top: 2px; }
 
-  .pyr-techs { padding-top: 2px; }
-  .pyr-desc { margin: 0 0 10px; color: var(--text-dim); font-size: 0.88rem; max-width: 72ch; }
-  .chip-cloud { display: flex; flex-wrap: wrap; gap: 8px; }
+  /* Corner + column headers */
+  .corner-cell { width: 140px; }
+  .col-header {
+    padding: 9px 10px 8px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid var(--border-strong);
+    border-left: 1px solid var(--border);
+    vertical-align: bottom;
+    white-space: normal;
+    transition: background 0.15s, color 0.15s;
+  }
+  .col-header:first-of-type { border-left: none; }
+  .col-label { display: block; line-height: 1.3; }
 
+  /* ---- Level row header ---- */
+  .level-cell {
+    padding: 14px 12px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border-strong);
+    border-left: 4px solid var(--tier-color, var(--border));
+    background: color-mix(in srgb, var(--tier-color, transparent) 7%, var(--bg-elev));
+  }
+  .level-l1 { --tier-color: var(--l1); }
+  .level-l2 { --tier-color: var(--l2); }
+  .level-l3 { --tier-color: var(--l3); }
+
+  .level-tag { display: block; font-family: var(--mono); font-size: 0.78rem; font-weight: 700; color: var(--tier-color); }
+  .level-name { display: block; font-weight: 700; font-size: 0.92rem; line-height: 1.2; margin-top: 2px; }
+  .level-tagline { display: block; color: var(--text-dim); font-size: 0.75rem; margin-top: 3px; line-height: 1.3; }
+
+  /* ---- Technique cells ---- */
+  .tech-cell {
+    padding: 8px 9px;
+    vertical-align: top;
+    border-bottom: 1px solid var(--border);
+    border-left: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child .tech-cell,
+  tbody tr:last-child .level-cell { border-bottom: none; }
+
+  .empty-cell { color: var(--text-faint); font-size: 0.8rem; display: block; padding: 2px 0; }
+
+  /* ---- Technique chips (table mode: no category tag) ---- */
   .tech-chip {
-    display: inline-flex; align-items: center; gap: 7px;
-    font: inherit; font-size: 0.85rem; cursor: pointer; text-align: left;
-    padding: 6px 11px 6px 9px; border-radius: 999px;
+    display: block; width: 100%;
+    font: inherit; font-size: 0.8rem; cursor: pointer; text-align: left;
+    padding: 5px 8px; border-radius: 6px; margin-bottom: 4px;
     border: 1px solid var(--border); background: var(--bg-elev); color: var(--text);
-    transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s, background 0.12s;
+    transition: border-color 0.12s, box-shadow 0.12s, background 0.12s;
+    display: flex; align-items: flex-start; gap: 6px;
   }
-  .tech-chip:hover { border-color: var(--tier-color, var(--accent)); box-shadow: var(--shadow); transform: translateY(-1px); }
+  .tech-chip:last-child { margin-bottom: 0; }
+  .tech-chip:hover { border-color: var(--tier-color, var(--accent)); box-shadow: var(--shadow); background: color-mix(in srgb, var(--tier-color, var(--accent)) 6%, var(--bg-elev)); }
   .tech-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .pyr-l0 .tech-chip { --tier-color: var(--l0); }
-  .pyr-l1 .tech-chip { --tier-color: var(--l1); }
-  .pyr-l2 .tech-chip { --tier-color: var(--l2); }
-  .pyr-l3 .tech-chip { --tier-color: var(--l3); }
-  .pyr-l4 .tech-chip { --tier-color: var(--l4); }
-  .tech-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--tier-color, var(--accent)); flex: none; }
-  .tech-chip-cat { color: var(--text-faint); font-size: 0.72rem; }
+  .tech-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--tier-color, var(--accent)); flex: none; margin-top: 5px; }
+  .tech-chip-title { line-height: 1.3; }
   .tech-chip.is-planned { border-style: dashed; color: var(--text-dim); }
   .tech-chip.is-planned .tech-dot { opacity: 0.5; }
-  .tech-chip.chip-hidden { display: none; }
-  .chip-empty { margin: 2px 0; color: var(--text-faint); font-size: 0.85rem; font-style: italic; }
 
-  .pyramid-hint { text-align: center; color: var(--text-faint); font-size: 0.85rem; margin: 22px 0 0; }
-
-  @media (max-width: 720px) {
-    .pyr-row { grid-template-columns: 1fr; gap: 10px; max-width: none; }
-    .pyr-band-cell { justify-content: flex-start; }
-    .pyr-band { min-height: 0; }
-  }
+  /* ---- Category filter: dim/highlight columns ---- */
+  .matrix-table.cat-filtered .col-header { color: var(--text-faint); }
+  .matrix-table.cat-filtered .col-header.col-active { color: var(--text); background: color-mix(in srgb, var(--accent) 8%, var(--bg-elev)); }
+  .matrix-table.cat-filtered .tech-cell { opacity: 0.25; }
+  .matrix-table.cat-filtered .tech-cell.col-active { opacity: 1; }
 
   /* ---- Modal ---- */
   .modal-overlay { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; }
@@ -221,22 +230,21 @@ const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.shor
     techniques: Tech[];
   };
 
-  // ---- Category filter ----
+  // ---- Category filter: highlights one column ----
+  const table = document.getElementById('matrix-table') as HTMLElement;
   const chips = Array.from(document.querySelectorAll<HTMLButtonElement>('#cat-filters .chip'));
-  const techChips = Array.from(document.querySelectorAll<HTMLButtonElement>('.tech-chip'));
-  const clouds = Array.from(document.querySelectorAll<HTMLElement>('.chip-cloud'));
 
   function applyFilter(cat: string) {
-    techChips.forEach((c) =>
-      c.classList.toggle('chip-hidden', cat !== 'all' && c.dataset.cat !== cat)
-    );
-    // Show an "empty" note in any level that now has nothing visible.
-    clouds.forEach((cloud) => {
-      const visible = cloud.querySelectorAll('.tech-chip:not(.chip-hidden)').length;
-      const note = cloud.querySelector<HTMLElement>('.chip-empty');
-      if (note) note.hidden = visible > 0;
-    });
+    if (cat === 'all') {
+      table.classList.remove('cat-filtered');
+      table.querySelectorAll('.col-active').forEach((el) => el.classList.remove('col-active'));
+    } else {
+      table.classList.add('cat-filtered');
+      table.querySelectorAll('.col-active').forEach((el) => el.classList.remove('col-active'));
+      table.querySelectorAll<HTMLElement>(`[data-cat="${cat}"]`).forEach((el) => el.classList.add('col-active'));
+    }
   }
+
   chips.forEach((c) =>
     c.addEventListener('click', () => {
       chips.forEach((x) => x.classList.toggle('chip-active', x === c));
@@ -250,6 +258,8 @@ const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.shor
   const scroll = overlay.querySelector('.modal-scroll') as HTMLElement;
   const fullLink = document.getElementById('modal-fullpage') as HTMLAnchorElement;
   const closeBtn = document.getElementById('modal-close') as HTMLButtonElement;
+
+  const techChips = Array.from(document.querySelectorAll<HTMLButtonElement>('.tech-chip'));
 
   let teardownCites: (() => void) | null = null;
   let lastFocus: HTMLElement | null = null;
@@ -273,11 +283,10 @@ const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.shor
       const res = await fetch(href, { headers: { 'X-Requested-With': 'modal' } });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const html = await res.text();
-      if (token !== reqToken) return; // a newer open superseded this one
+      if (token !== reqToken) return;
       const doc = new DOMParser().parseFromString(html, 'text/html');
       const main = doc.querySelector('main');
       if (!main) throw new Error('No content');
-      // Drop the breadcrumb (first paragraph) and any executable scripts.
       const crumb = main.querySelector('p');
       if (crumb && crumb.querySelector('a[href$="/techniques/"]')) crumb.remove();
       main.querySelectorAll('script:not([type="application/json"])').forEach((s) => s.remove());
@@ -299,7 +308,7 @@ const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.shor
     teardownCites?.();
     teardownCites = null;
     body.innerHTML = '';
-    reqToken++; // cancel any in-flight load
+    reqToken++;
     lastFocus?.focus?.();
     if (!fromPop && location.hash.startsWith('#t/')) history.pushState('', '', location.pathname + location.search);
   }
@@ -314,7 +323,6 @@ const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.shor
     if (e.key === 'Escape' && !overlay.hidden) closeModal();
   });
 
-  // Deep-linking: #t/<category>/<slug> opens the matching technique.
   function openFromHash(fromPop = false) {
     const m = location.hash.match(/^#t\/(.+)$/);
     if (!m) {
@@ -325,7 +333,6 @@ const catShort = (slug: string) => CATEGORIES.find((c) => c.slug === slug)?.shor
     const chip = techChips.find((c) => c.dataset.id === id);
     if (chip) {
       if (fromPop) {
-        // Reflect a back/forward nav without pushing more history.
         fullLink.href = chip.dataset.href!;
         body.innerHTML = '<p class="modal-loading">Loading…</p>';
         overlay.hidden = false;

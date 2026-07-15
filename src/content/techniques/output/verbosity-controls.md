@@ -24,7 +24,7 @@ status: published
 lastUpdated: "2026-06-29"
 related:
   - "output/output-length-control"
-  - "output/max-token-policies"
+  - "output/output-length-control"
   - "model-routing/reasoning-token-budgeting"
 sources:
   - id: openai-gpt5-dev

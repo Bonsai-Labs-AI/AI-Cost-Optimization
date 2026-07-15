@@ -1,7 +1,7 @@
 ---
 title: "Hierarchical Retrieval"
 category: rag
-maturityLevel: 3
+maturityLevel: 2
 maturityProvisional: false
 shortDescription: "Retrieve in stages over a hierarchy (summaries/parents → drill into relevant children, or coarse→fine) so you read fewer, better-targeted units to find the answer instead of scanning many flat top-k chunks."
 effort: High
@@ -108,7 +108,7 @@ The cost mechanism is specifically **fewer retrieved *units*** — fewer chunks/
 therefore fewer LLM-context tokens — **at equal recall**. It is *not* inherently a smaller
 context window: you still fill the same budget if you want to. The win is that the units you
 put in that budget are better targeted, so you can hit the same recall with fewer of them,
-or the same unit count at higher recall. This lands at **Level 3** because the savings come
+or the same unit count at higher recall. This lands at **Level 2** because the savings come
 from **building and maintaining a real hierarchy** (offline summarization, a parent/child
 docstore, re-indexing on change) — genuine engineering, not a config flag.
 
@@ -170,7 +170,7 @@ what this is *not*: it does not automatically shrink your prompt window, and it 
 context compression. If you keep k and the token budget fixed, you spend the same input
 tokens — you just spend them on better-targeted units.
 
-### The costs (why this is L3, not L1)
+### The costs (why this is L2, not L1)
 
 - **Building the hierarchy.** Summary/RAPTOR indexes require an **offline LLM summarization
   pass** over the corpus (RAPTOR: recursive summarization at every cluster). That is real

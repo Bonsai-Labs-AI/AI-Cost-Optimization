@@ -23,7 +23,7 @@ lastUpdated: "2026-07-02"
 related:
   - "caching-reuse/prompt-caching-prefix-caching"
   - "prompt-context/context-window-budgeting"
-  - "prompt-context/few-shot-example-pruning"
+  - "prompt-context/few-shot-example-selection"
   - "caching-reuse/cache-aware-agent-design"
 sources:
   - id: anthropic-bestpractices

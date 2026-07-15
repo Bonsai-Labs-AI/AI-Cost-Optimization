@@ -23,7 +23,7 @@ related:
   - "model-routing/model-right-sizing"
   - "model-routing/dynamic-model-routing"
   - "output/output-length-control"
-  - "output/max-token-policies"
+  - "output/output-length-control"
   - "output/streaming-with-early-stop"
   - "product-ux/user-controlled-quality-mode"
 sources:

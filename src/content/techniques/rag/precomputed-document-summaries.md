@@ -1,7 +1,7 @@
 ---
 title: "Precomputed Document Summaries"
 category: rag
-maturityLevel: 3
+maturityLevel: 2
 maturityProvisional: false
 shortDescription: "Summarize each document once offline, index and retrieve/route on the short summaries, and pull full document content into context only when a query actually needs it — cutting retrieved tokens and amortizing summarization cost across many queries."
 effort: Medium
@@ -109,7 +109,7 @@ summary, as well as all nodes corresponding to the document," then selects relev
 documents by summary (via an LLM or by embedding similarity) before returning their
 nodes.[^llamaindex-dsi-docs]
 
-The cost logic is an **amortization play**, which is why it sits at **Level 3**. The
+The cost logic is an **amortization play**, which is why it sits at **L2**. The
 summary is generated *once* and reused across *every* future query against that document, so
 the more queries per document, the better the payoff — but you take on a real summarization
 pipeline and a refresh obligation when documents change. Below a corpus with meaningful

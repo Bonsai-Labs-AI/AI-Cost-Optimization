@@ -1,7 +1,7 @@
 ---
 title: "GraphRAG vs Vector Tradeoff"
 category: rag
-maturityLevel: 4
+maturityLevel: 3
 maturityProvisional: false
 shortDescription: "A decision, not a default: knowledge-graph RAG (entity/relation graph + community summaries) pays for global, multi-hop 'connect-the-dots' queries but carries a large LLM-heavy indexing cost — so reach for it only when the query mix and corpus stability justify amortizing that build."
 effort: High
@@ -95,7 +95,7 @@ re-run when the corpus changes. Microsoft's own repository leads with the warnin
 "GraphRAG indexing can be an **expensive operation** … understand the process and costs
 involved, and **start small**."[^graphrag-repo] So GraphRAG trades a large, recurring
 **indexing** cost for a **query-time** win that only materializes on a specific query mix.
-It sits at **Level 4** because it is a heavy, specialized build with a *narrow* payoff —
+It sits at **L3** because it is a heavy, specialized build with a *narrow* payoff —
 net-negative in the common case where most questions are local.
 
 ## Detailed Approach & Techniques

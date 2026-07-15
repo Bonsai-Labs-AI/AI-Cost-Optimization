@@ -1,7 +1,7 @@
 ---
 title: "Tool Result Caching"
 category: caching-reuse
-maturityLevel: 3
+maturityLevel: 2
 maturityProvisional: false
 shortDescription: "Cache the results of agent tool calls (lookups, fetches, pure computations) keyed by tool + arguments so repeated identical calls don't re-execute — saving both the external tool cost and the tokens of re-processing the result."
 effort: Medium
@@ -25,9 +25,9 @@ lastUpdated: "2026-07-03"
 related:
   - "caching-reuse/cache-aware-agent-design"
   - "caching-reuse/cache-invalidation-strategies"
-  - "caching-reuse/retrieval-result-caching"
+  - "caching-reuse/rag-pipeline-caching"
   - "caching-reuse/prompt-caching-prefix-caching"
-  - "agent-workflow/reusable-memory-artifact-store"
+  - "agent-workflow/agent-memory-management"
 sources:
   - id: anthropic-tool-use
     title: "Tool use with Claude"
@@ -117,11 +117,11 @@ or `fetch(url)` is executed repeatedly with the exact same arguments.
 **Tool result caching** memoizes those results. Key each tool call by `(tool name, arguments)`
 and, on a repeat, return the stored result instead of re-executing.[^dev-idempotent] A hit
 saves both the external execution cost **and** the work of re-fetching and re-tokenizing the
-result into context. It sits at **Level 3** not because the cache is hard to build — it
+result into context. It sits at **Level 2** not because the cache is hard to build — it
 isn't — but because of the **freshness problem**: external data changes underneath you, so a
 naïvely-cached tool result can silently feed the agent **stale** information. Getting the
 per-tool TTL and invalidation right is the real engineering, and it is why this is a
-custom-systems technique rather than a config toggle.
+deliberate-engineering technique rather than a config toggle.
 
 ## Detailed Approach & Techniques
 
@@ -165,9 +165,9 @@ retry-and-replan duplication of a single task; a **persistent** store (SqliteCac
 extends reuse **across runs** of the same workflow — overlapping with a durable
 memory/artifact store.[^langgraph-nodecache]
 
-### The L3 driver — freshness and invalidation
+### The L2 driver — freshness and invalidation
 
-This is the hard part and the reason the technique is Level 3. External data changes, so
+This is the hard part and the reason the technique is Level 2. External data changes, so
 every cached tool result needs a **staleness bound** matched to how fast its source moves.
 The invalidation toolkit is the standard cache one, applied per tool type:[^gfg-invalidation]
 

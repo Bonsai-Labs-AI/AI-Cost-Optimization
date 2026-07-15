@@ -21,9 +21,9 @@ status: published
 lastUpdated: "2026-07-03"
 related:
   - "rag/embedding-quantization-mrl"
-  - "caching-reuse/embedding-caching"
+  - "caching-reuse/rag-pipeline-caching"
   - "rag/reducing-retrieved-chunk-count"
-  - "fine-tuning/task-specific-classifiers"
+  - "fine-tuning/task-specific-lightweight-models"
 sources:
   - id: mrl-paper
     title: "Matryoshka Representation Learning"

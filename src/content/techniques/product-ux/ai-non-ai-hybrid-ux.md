@@ -1,7 +1,7 @@
 ---
 title: "AI / Non-AI Hybrid UX"
 category: product-ux
-maturityLevel: 2
+maturityLevel: 1
 maturityProvisional: false
 shortDescription: "Handle the parts of a flow that don't need generative AI with deterministic paths — rules, search, buttons, templates, and classical ML — so the expensive LLM is reserved for the interactions that genuinely require it, and a large share of requests never call the model at all."
 effort: Medium
@@ -104,8 +104,9 @@ instantly, this is one of the few optimizations that improves cost, latency, **a
 reliability at the same time — deterministic code is auditable and always returns the same
 answer for the same input, where an LLM occasionally does not.[^hybrid-arch]
 
-It sits at **Level 2** rather than Level 1 because doing it well is real product
-engineering, not a config toggle: you have to identify which slices of the flow are
+It sits at **L1** because the core pattern — identify what doesn't need the model and route
+it away — is a foundational design decision rather than deep infrastructure work. Doing it
+well still requires real product thinking: you have to identify which slices of the flow are
 deterministic, build (and evaluate) the routing/classifier that decides "LLM or not," and
 design the fallback so users are never trapped in a rigid path when they actually want
 natural language.[^google-convo-design]

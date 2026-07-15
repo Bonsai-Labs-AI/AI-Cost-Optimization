@@ -1,7 +1,7 @@
 ---
 title: "Router Training From Production Traffic"
 category: model-routing
-maturityLevel: 4
+maturityLevel: 3
 maturityProvisional: false
 shortDescription: "Continuously (re)train a request-router on your own production traffic and outcome labels so it learns which model tier can handle each request — a self-improving MLOps flywheel that beats a static or off-the-shelf router as data accrues."
 effort: High
@@ -23,8 +23,6 @@ related:
   - "model-routing/dynamic-model-routing"
   - "model-routing/llm-cascades"
   - "fine-tuning/fine-tuning-cheaper-models"
-  - "visibility-measurement/quality-cost-evaluation-suite"
-  - "visibility-measurement/unit-economics-cost-per-outcome"
 sources:
   - id: routellm-paper
     title: "RouteLLM: Learning to Route LLMs with Preference Data"
@@ -104,13 +102,13 @@ succeed?), train a router on that data, deploy it, collect more labels, and retr
 The router is tuned to the exact distribution it serves, and it *improves as data
 accrues* — a **data flywheel**.[^nvidia-flywheel-glossary]
 
-The distinction from the L3 technique is deliberate. A **static** router you configure
-once and leave alone is Level 3. **Level 4 is the continuous retraining loop**: a
-maintained ML system with a label pipeline, an eval harness, drift monitoring, and a
-retraining cadence — an MLOps product, not a config file.[^mlops-principles] That is why
-it is the near-frontier tier: the marginal gain over a good off-the-shelf router is real
-but incremental, and it is only worth the standing engineering cost at high, sustained
-volume where a few points of routing accuracy translate into serious money.
+The distinction from a simpler routing technique is deliberate. A **static** router you
+configure once and leave alone is an L2 investment. **L3 is the continuous retraining
+loop**: a maintained ML system with a label pipeline, an eval harness, drift monitoring,
+and a retraining cadence — an MLOps product, not a config file.[^mlops-principles] That
+is why it sits at the highly-optimized tier: the marginal gain over a good off-the-shelf
+router is real but incremental, and it is only worth the standing engineering cost at
+high, sustained volume where a few points of routing accuracy translate into serious money.
 
 ## Detailed Approach & Techniques
 
@@ -122,7 +120,7 @@ The loop has five stages, and the point is that it *turns*:
    attach an **outcome label** — did the tier that served it actually produce an
    acceptable answer?
 2. **Label** the traffic. Labels come from wherever you already measure quality: an
-   offline [quality/cost evaluation suite](/techniques/visibility-measurement/quality-cost-evaluation-suite/),
+   offline quality/cost evaluation suite,
    user signals (thumbs-up/down, edits, retries, or — as GPT-5's own router uses — users
    manually switching models[^gpt5-intro]), and especially
    [LLM cascade](/techniques/model-routing/llm-cascades/) **escalations**: every time the
@@ -163,7 +161,7 @@ trained routers **transfer to unseen model pairs without retraining**[^routellm-
 which is exactly why an off-the-shelf router is a viable baseline, and why the marginal
 gain of the custom flywheel must be measured, not assumed.
 
-### Measuring the marginal gain (the L4 justification)
+### Measuring the marginal gain (the L3 justification)
 
 Evaluate the trained router against the **oracle** — the per-request cost-optimal choice —
 on a held-out slice, the way [RouterBench](https://arxiv.org/abs/2403.12031) does with its
@@ -174,7 +172,7 @@ router) but **trained-router-on-your-traffic vs. best-off-the-shelf-router** and
 decides between a fast and a thinking model and *is itself continuously trained on real
 signals* (model switches, preference rates, correctness).[^gpt5-intro] If your custom
 flywheel cannot beat that free baseline by enough to cover a standing ML team, it does not
-belong at L4 — it belongs deleted.
+belong at L3 — it belongs deleted.
 
 ### Costs and risks
 
@@ -204,26 +202,26 @@ keeps re-tuning as ticket topics drift.[^nvidia-flywheel-glossary] At millions o
 a month, moving even 10 more percentage points of traffic off the frontier tier is a large
 recurring saving — comfortably more than the cost of the ML team maintaining the loop. The
 label pipeline is *already built* (the cascade produces it), which is what tips this over
-the L4 ROI line.
+the L3 ROI line.
 
 ## Example Where It Would NOT Work
 
 - **Low or spiky volume.** A product doing thousands (not millions) of requests a day will
   never accumulate enough labels to beat a good off-the-shelf router, and the standing cost
-  of a retraining pipeline dwarfs the routing savings. Use a **static** L3
-  [dynamic router](/techniques/model-routing/dynamic-model-routing/) or simply lean on
+  of a retraining pipeline dwarfs the routing savings. Use a **static**
+  [dynamic router](/techniques/model-routing/dynamic-model-routing/) (L3) or simply lean on
   **GPT-5's free built-in router**,[^gpt5-intro] which is continuously trained for you.
 - **No trustworthy label signal.** If you cannot cheaply tell whether the cheap model
   *actually succeeded* on a request, the flywheel has nothing to learn from — a
   meta-evaluator would cost as much as the routing it informs. Fix
-  [quality/cost measurement](/techniques/visibility-measurement/quality-cost-evaluation-suite/)
+  quality/cost measurement
   first.
 - **The off-the-shelf router already suffices.** Because well-trained routers transfer to
   new model pairs without retraining,[^routellm-blog] a generic router is often "good
   enough." If the marginal gain over it (measured against the
   [oracle](https://arxiv.org/abs/2403.12031)[^routerbench]) does not clear the cost of
   maintaining a live ML system,[^mlops-principles] this is over-engineering — the classic
-  L4 trap.
+  L3 over-investment trap.
 - **Unstable model landscape.** If you swap base models every few weeks, the traffic under
   each router version is too short-lived to accumulate a useful, stationary label set, and
   you spend all your time retraining rather than saving.

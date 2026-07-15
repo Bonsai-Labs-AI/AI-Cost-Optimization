@@ -1,7 +1,7 @@
 ---
 title: "Exact Response Caching"
 category: caching-reuse
-maturityLevel: 2
+maturityLevel: 1
 maturityProvisional: false
 shortDescription: "Store the full model response keyed on a normalized, exact request so an identical call returns the stored answer with zero model tokens — the cost problem being repeated identical requests that are re-billed in full."
 effort: Medium
@@ -102,8 +102,8 @@ application cache: on a hit the model is **never called at all**. The two stack 
 caching cuts the cost of the calls you *do* make; exact caching removes the calls you don't
 need to make twice.
 
-It sits at **Level 2**, not Level 1, precisely because doing it *correctly* is real
-engineering rather than a dictionary lookup. A naive `dict[prompt] = response` is trivial;
+It sits at **L1**, earning its place as a foundational win precisely because doing it
+*correctly* is real engineering rather than a dictionary lookup. A naive `dict[prompt] = response` is trivial;
 the hard parts — a **normalized key** that neither collides nor fragments, **TTL and
 invalidation** so you never serve a stale or now-wrong answer, and honest judgment about
 **where the hit rate is actually nonzero** — are what separate a cache that saves money
@@ -137,7 +137,7 @@ Two failure modes bracket the design:
   `enable_caching_on_provider_specific_optional_params` for exactly the judgment call of
   which non-standard params belong in the key.[^litellm-cache]
 
-### TTL, expiration, and invalidation — the reason it's L2
+### TTL, expiration, and invalidation — the engineering that matters
 
 A cached response is a snapshot of a fact that may stop being true. Correctness comes from
 three levers:

@@ -1,7 +1,7 @@
 ---
 title: "Multi-LoRA Serving"
 category: fine-tuning
-maturityLevel: 4
+maturityLevel: 3
 maturityProvisional: false
 shortDescription: "Serve many LoRA adapters (100s–1000s) off a single shared base model on one GPU, swapping adapters per request, so owning dozens of narrow fine-tuned models costs roughly one base model's serving footprint instead of N separate deployments."
 effort: High
@@ -23,8 +23,8 @@ related:
   - "fine-tuning/fine-tuning-cheaper-models"
   - "fine-tuning/local-model-deployment"
   - "fine-tuning/calibrated-quantization"
-  - "fine-tuning/task-specific-classifiers"
-  - "fine-tuning/task-specific-extractors"
+  - "fine-tuning/task-specific-lightweight-models"
+  - "fine-tuning/task-specific-lightweight-models"
 sources:
   - id: slora
     title: "S-LoRA: Serving Thousands of Concurrent LoRA Adapters"
@@ -103,7 +103,7 @@ cheap, one GPU can serve **hundreds to thousands** of distinct fine-tuned models
 throughput close to serving the base alone.[^slora][^lorax-repo] The per-model serving
 cost effectively collapses from "one GPU each" to "one shared GPU for all of them" —
 which is why this is the piece that makes owning dozens of narrow fine-tunes
-economically sane. It sits at **Level 4** because it is a real self-hosted serving
+economically sane. It sits at **L3** because it is a real self-hosted serving
 build (custom kernels, adapter memory tiering, an inference stack you own and operate),
 and it only pays off once N is genuinely large.
 

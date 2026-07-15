@@ -11,13 +11,11 @@
   --accent: #2563eb;
   --accent-ink: #ffffff;
 
-  /* Maturity level accents (L0 → L4), warm/low to cool/high maturity.
+  /* Maturity level accents (L1 → L3), warm/low to cool/high maturity.
      Deep enough to read as text AND tint as fills on a light background. */
-  --l0: #dc2626; /* red    — obvious waste */
-  --l1: #ea580c; /* orange — basic */
-  --l2: #d97706; /* amber  — advanced */
+  --l1: #ea580c; /* orange — basic optimization */
+  --l2: #d97706; /* amber  — advanced optimization */
   --l3: #16a34a; /* green  — highly optimized */
-  --l4: #2563eb; /* blue   — near-frontier */
 
   --radius: 10px;
   --radius-sm: 7px;
@@ -88,11 +86,9 @@ pre code { background: none; padding: 0; }
   white-space: nowrap;
 }
 .badge .dot { width: 8px; height: 8px; border-radius: 50%; }
-.badge-l0 { color: var(--l0); border-color: color-mix(in srgb, var(--l0) 45%, transparent); }
 .badge-l1 { color: var(--l1); border-color: color-mix(in srgb, var(--l1) 45%, transparent); }
 .badge-l2 { color: var(--l2); border-color: color-mix(in srgb, var(--l2) 45%, transparent); }
 .badge-l3 { color: var(--l3); border-color: color-mix(in srgb, var(--l3) 45%, transparent); }
-.badge-l4 { color: var(--l4); border-color: color-mix(in srgb, var(--l4) 45%, transparent); }
 
 .meta-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
 

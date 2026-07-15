@@ -20,7 +20,7 @@ measurementMethods:
 status: published
 lastUpdated: "2026-07-03"
 related:
-  - "caching-reuse/embedding-caching"
+  - "caching-reuse/rag-pipeline-caching"
   - "fine-tuning/specialized-embedding-models"
   - "rag/reducing-retrieved-chunk-count"
 sources:

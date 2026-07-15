@@ -20,10 +20,10 @@ measurementMethods:
 status: published
 lastUpdated: "2026-07-03"
 related:
-  - "prompt-context/few-shot-example-pruning"
+  - "prompt-context/few-shot-example-selection"
   - "prompt-context/context-window-budgeting"
   - "prompt-context/structured-context-packing"
-  - "prompt-context/dynamic-few-shot-selection"
+  - "prompt-context/few-shot-example-selection"
   - "caching-reuse/prompt-caching-prefix-caching"
 sources:
   - id: llmlingua-paper

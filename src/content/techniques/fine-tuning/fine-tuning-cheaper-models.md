@@ -21,8 +21,8 @@ status: published
 lastUpdated: "2026-07-03"
 related:
   - "model-routing/model-right-sizing"
-  - "fine-tuning/task-specific-classifiers"
-  - "fine-tuning/task-specific-extractors"
+  - "fine-tuning/task-specific-lightweight-models"
+  - "fine-tuning/task-specific-lightweight-models"
   - "model-routing/local-open-weight-substitution"
   - "model-routing/router-training-from-traffic"
 sources:
@@ -190,7 +190,7 @@ Fine-tuning compounds. Log frontier traffic → distill a small model → route 
 it → keep logging the hard residual the frontier still handles → periodically re-distill. Each
 turn moves more traffic to the cheap model and sharpens the training set. This is the mechanism
 behind **learning a router from your own traffic** (cross-link *Router Training from Traffic*,
-L4): the same logged (input → frontier-output) pairs that train the cheap model also train the
+L3): the same logged (input → frontier-output) pairs that train the cheap model also train the
 classifier that decides when to use it.
 
 ## Example Where It Works

@@ -6,17 +6,22 @@ before doing research/authoring work.
 ## What this is
 
 A heavily-cited research documentation site: **"Cost Optimization for AI Products"**.
-**82 techniques** to make AI products cheaper without losing quality, organized as a
-**maturity pyramid** (5 levels, L0→L4) across **10 categories**. Static Astro site with an
+**73 techniques** to make AI products cheaper without losing quality, organized as a
+**maturity pyramid** (3 levels, L0→L2) across **9 categories**. Static Astro site with an
 interactive pyramid overview that zooms from a level into its techniques and out to each
 technique's full detail page. Internal Bonsai Labs research.
+
+> Restructured 2026-07-14: collapsed the original 5 levels → 3 (old L0+L1→L0, L2→L1,
+> L3+L4→L2) and removed the `visibility-measurement` category and its 9 techniques.
+> New distribution L0=14, L1=23, L2=36. This site is intended to become the first of
+> several topic pyramids (planned: "AI SDLC", "Chat/Cowork").
 
 Audience framing: a maturity model for *clients* — "where are you, what's the next win."
 
 ## Architecture (how it fits together)
 
-- **`src/data/taxonomy.mjs` is the single source of truth.** It defines the 5
-  `MATURITY_LEVELS`, the 10 `CATEGORIES`, and every technique (`TECHNIQUES_BY_CATEGORY`)
+- **`src/data/taxonomy.mjs` is the single source of truth.** It defines the 3
+  `MATURITY_LEVELS`, the 9 `CATEGORIES`, and every technique (`TECHNIQUES_BY_CATEGORY`)
   with its slug + maturity level (confirmed in the review — see `docs/DECISIONS.md`).
   Plain `.mjs` so BOTH Astro (build) and the Node stub generator import it. Add new
   techniques here first, then `npm run gen:stubs`.

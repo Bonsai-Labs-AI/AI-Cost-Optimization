@@ -21,7 +21,7 @@ status: published
 lastUpdated: "2026-07-03"
 related:
   - "model-routing/model-right-sizing"
-  - "model-routing/provider-routing"
+  - "model-routing/provider-and-fallback-routing"
   - "model-routing/dynamic-model-routing"
   - "fine-tuning/fine-tuning-cheaper-models"
 sources:

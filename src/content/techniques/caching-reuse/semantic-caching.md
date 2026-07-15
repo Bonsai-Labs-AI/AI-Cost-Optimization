@@ -23,8 +23,8 @@ related:
   - "caching-reuse/exact-response-caching"
   - "caching-reuse/cache-invalidation-strategies"
   - "caching-reuse/cache-hit-rate-instrumentation"
-  - "caching-reuse/embedding-caching"
-  - "caching-reuse/retrieval-result-caching"
+  - "caching-reuse/rag-pipeline-caching"
+  - "caching-reuse/rag-pipeline-caching"
 sources:
   - id: gptcache-repo
     title: "GPTCache: Semantic cache for LLMs"
@@ -115,7 +115,7 @@ too-loose threshold serves a **confidently wrong answer** — a similar-but-not-
 gets someone else's response. This false-hit risk is the defining engineering problem of the
 technique, and getting it right (threshold tuning, invalidation, false-hit monitoring, an embedding
 model that separates your intents) is real work. It is the fuzzy sibling of *exact-response caching*
-(L2), and it pays off on the same signal — high repeated-intent traffic — but one tier up in both
+(L1), and it pays off on the same signal — high repeated-intent traffic — but one tier up in both
 gain and risk.
 
 ## Detailed Approach & Techniques

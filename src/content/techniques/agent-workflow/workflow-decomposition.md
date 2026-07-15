@@ -1,7 +1,7 @@
 ---
 title: "Workflow Decomposition"
 category: agent-workflow
-maturityLevel: 3
+maturityLevel: 2
 maturityProvisional: false
 shortDescription: "Replace one open-ended autonomous agent loop with a fixed, code-orchestrated workflow of smaller scoped steps — each on the cheapest sufficient model with minimal context — so you stop paying a frontier model to re-carry the whole task, and bounded steps stop runaway loops."
 effort: High
@@ -21,11 +21,10 @@ measurementMethods:
 status: published
 lastUpdated: "2026-07-03"
 related:
-  - "agent-workflow/state-compression-for-agents"
-  - "agent-workflow/reusable-memory-artifact-store"
+  - "agent-workflow/agent-memory-management"
+  - "agent-workflow/agent-memory-management"
   - "model-routing/dynamic-model-routing"
-  - "visibility-measurement/budget-limits-guardrails"
-  - "batching-async/latency-tiered-processing"
+  - "batching-async/deferred-and-speculative-generation"
 sources:
   - id: anthropic-bea
     title: "Building Effective AI Agents"
@@ -106,7 +105,7 @@ model tier are exactly the levers to pull, and optimizing that token flow is whe
 come from: one study of MCP-enabled agentic workflows reports ~66% lower cost and ~88% fewer
 input tokens from scheduling/decomposition.[^faas-agentic]
 
-This is **Level 3**: it is real engineering (orchestration code, per-step prompts, an eval
+This is **Level 2**: it is real engineering (orchestration code, per-step prompts, an eval
 harness to prove the workflow matches the agent), and the ROI is strongest at scale on a
 task you run over and over.
 

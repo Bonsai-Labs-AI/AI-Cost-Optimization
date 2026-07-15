@@ -1,7 +1,7 @@
 ---
 title: "Tool-Use Minimization"
 category: agent-workflow
-maturityLevel: 2
+maturityLevel: 1
 maturityProvisional: false
 shortDescription: "Cut the token cost of an agent's tools — trim tool count and description bloat, and load tools and skills lazily — so you stop re-sending a huge static tool catalog on every single agent step."
 effort: Medium
@@ -24,7 +24,7 @@ related:
   - "agent-workflow/programmatic-tool-calling"
   - "agent-workflow/agent-budget-guardrails"
   - "prompt-context/provider-native-context-management"
-  - "agent-workflow/state-compression-for-agents"
+  - "agent-workflow/agent-memory-management"
 sources:
   - id: anthropic-advanced-tool-use
     title: "Introducing advanced tool use on the Claude Developer Platform"
@@ -98,9 +98,9 @@ Tool-Use Minimization attacks this on three fronts: **use fewer tools**, **make 
 definition leaner**, and **load tools (and agent skills) lazily** — only the ones relevant
 to the current step. It is a **double win**: cutting the catalog both saves tokens *and*
 improves the model's ability to pick the right tool, since selection accuracy degrades once
-a toolset grows past ~30–50 tools.[^anthropic-tool-search] It sits at **Level 2** because
-doing it well is deliberate engineering (retrieval/deferred-loading wiring, description
-audits, an eval to prove selection didn't regress) rather than a config flag.
+a toolset grows past ~30–50 tools.[^anthropic-tool-search] It sits at **L1** because
+the core levers — trimming tool count, tightening descriptions, and enabling deferred
+loading — are straightforward configuration and audit work rather than custom engineering.
 
 ## Detailed Approach & Techniques
 

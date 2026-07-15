@@ -1,7 +1,7 @@
 ---
 title: "Cost-Aware Product Tiers"
 category: product-ux
-maturityLevel: 3
+maturityLevel: 2
 maturityProvisional: false
 shortDescription: "Bound AI spend per plan by attaching hard usage caps, rate limits, and model-access gating to each product tier — with an abuse-limited free tier — so no single user or leaked key can run up an unbounded bill."
 effort: Medium
@@ -23,9 +23,7 @@ status: published
 lastUpdated: "2026-07-03"
 related:
   - "product-ux/ai-feature-gating"
-  - "visibility-measurement/budget-limits-guardrails"
   - "prompt-context/user-controlled-quality-mode"
-  - "visibility-measurement/unit-economics-cost-per-outcome"
   - "agent-workflow/agent-budget-guardrails"
 sources:
   - id: litellm-budgets

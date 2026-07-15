@@ -95,7 +95,7 @@ until it either exhausts the context window and fails, or simply becomes expensi
 most of what it re-encodes each turn is stale.
 
 The classic fix is to *build* a context pipeline: prune old messages, offload state to a
-store, and summarize history into a rolling digest (the Level-3 "build" trio —
+store, and summarize history into a rolling digest (the L2 "build" trio —
 *Context Pruning*, *Context Offloading*, *Conversation Summarization*). **Provider-native
 context management is the "buy/config" path**: providers now ship these mechanisms as
 first-class API features you enable with a flag or a tool declaration, no custom pipeline
@@ -180,7 +180,7 @@ relocate** context: context editing, the memory tool, and compaction.
 ### The config-vs-build tradeoff
 
 Reach for native management first: it's a few lines of config, it's maintained by the
-provider, and it gets you most of the win. Build the L3 custom path (*Context Pruning*,
+provider, and it gets you most of the win. Build the L2 custom path (*Context Pruning*,
 *Context Offloading*, *Conversation Summarization*, *State Compression for Agents*) only
 when you need what config can't give you — a domain-specific eviction policy (e.g. "never
 drop the legal citations, always drop the raw HTML"), a provider-portable pipeline across
@@ -211,7 +211,7 @@ config block and a memory handler.
   relevance. If turn 5's tool result is the one turn 60 needs to answer correctly — and it
   wasn't in the `keep` window or saved to memory — the model answers from a placeholder and
   silently degrades. The failure is invisible unless you eval for it; a domain-specific
-  L3 pruner that scores relevance is the right tool when this risk is high.[^anthropic-context-editing]
+  L2 pruner that scores relevance is the right tool when this risk is high.[^anthropic-context-editing]
 - **Short or single-turn workloads.** If sessions never approach the trigger threshold,
   there's nothing to clear or compact — you pay setup cost for zero benefit. Native
   management earns its keep only on long-horizon agents and lengthy chats.[^anthropic-context-mgmt]

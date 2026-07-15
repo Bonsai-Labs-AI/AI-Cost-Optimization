@@ -1,7 +1,7 @@
 ---
 title: "Cache Invalidation Strategies"
 category: caching-reuse
-maturityLevel: 3
+maturityLevel: 2
 maturityProvisional: false
 shortDescription: "The cross-cutting discipline — TTLs, versioned/namespaced keys, and event-driven purges — that keeps every cache (exact, semantic, retrieval, tool, embedding) correct as models, prompts, and data change, so aggressive caching saves money instead of shipping stale wrong answers."
 effort: Medium
@@ -26,9 +26,9 @@ lastUpdated: "2026-07-03"
 related:
   - "caching-reuse/exact-response-caching"
   - "caching-reuse/semantic-caching"
-  - "caching-reuse/retrieval-result-caching"
+  - "caching-reuse/rag-pipeline-caching"
   - "caching-reuse/tool-result-caching"
-  - "caching-reuse/embedding-caching"
+  - "caching-reuse/rag-pipeline-caching"
   - "caching-reuse/summary-caching"
 sources:
   - id: redis-eviction
@@ -125,7 +125,7 @@ caching **safe**: without it you either cache timidly (short TTLs, low hit rate,
 savings) or cache recklessly (long TTLs, high hit rate, silent quality decay). With it you
 can push hit rate as high as the data's real volatility allows and no further.
 
-It sits at **Level 3** because doing it correctly is genuine cross-system engineering:
+It sits at **Level 2** because doing it correctly is genuine cross-system engineering:
 you have to know, per cache, *what* invalidates it, wire version tokens through the key,
 add purge hooks to your write and deploy paths, and pick a TTL per data-volatility class —
 and get it right consistently across five different cache types. It is a **Medium-effort,
@@ -287,7 +287,7 @@ tax.
 - **Where the invalidation machinery costs more than the cache saves.** For a low-traffic
   endpoint, the engineering to wire version tokens, purge hooks, and stale-hit monitoring
   across every cache can exceed the model spend it protects. Below meaningful volume, a
-  plain short TTL (or no cache) is the right call, and the full L3 discipline is
+  plain short TTL (or no cache) is the right call, and the full L2 discipline is
   over-engineering — reserve it for caches whose hit-driven savings are large enough to
   justify guaranteeing their correctness.[^redis-eviction]
 

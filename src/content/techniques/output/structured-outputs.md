@@ -24,7 +24,7 @@ status: published
 lastUpdated: "2026-06-29"
 related:
   - "output/constrained-decoding"
-  - "output/max-token-policies"
+  - "output/output-length-control"
   - "output/template-plus-fill"
 sources:
   - id: openai-so-blog

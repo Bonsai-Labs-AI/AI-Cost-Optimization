@@ -1,7 +1,7 @@
 ---
 title: "Local Model Deployment"
 category: fine-tuning
-maturityLevel: 4
+maturityLevel: 3
 maturityProvisional: false
 shortDescription: "Self-host a model you fine-tuned for one narrow task on your own (owned or rented) GPUs at production scale — at very high, steady volume with high GPU utilization this beats any API on $/token for that task, but it is net-negative below break-even."
 effort: High
@@ -119,7 +119,7 @@ for.[^devtk-breakeven][^lambda-pricing] But that advantage only exists **above a
 volume and at a utilization you can actually sustain**. Below it, you are paying for idle
 silicon and an on-call rotation to beat a bill you could have paid with a credit card.
 
-That is why this is **Level 4**: it is not a config change, it is standing up and running an
+That is why this is **Level 3**: it is not a config change, it is standing up and running an
 ML-serving function — capacity planning, throughput tuning, reliability, on-call. The gain
 is **High (Very High at true scale)**; the risk is **High**, because the economics collapse
 the moment utilization does. The honest framing for a client is: *do this only when a
@@ -190,7 +190,7 @@ Two multipliers dominate the real answer:
    triples with it. **This one number decides the whole business case** — which is why the
    measurement section leads with it.
 
-The fine-tuning twist that makes this *worth* the effort at L4: you are not serving Llama-70B,
+The fine-tuning twist that makes this *worth* the effort at L3: you are not serving Llama-70B,
 you are serving a **small model fine-tuned to match a big model on one narrow task**. A tuned
 7B–13B model needs far less GPU per token, so its capacity per dollar is much higher and its
 break-even far lower than the 70B example — *provided quality holds on that task*.
@@ -219,7 +219,7 @@ fine-tuned an **8B open model** that matches their old GPT-4-class extractor on 
   Fully-loaded (GPUs × ~1.7 for ops), the same volume runs a **large multiple cheaper per
   token**, and the gap widens as volume grows.[^devtk-breakeven][^vllm-repo][^lambda-pricing]
 
-Every condition that makes L4 pay is present: **one narrow task, a fine-tuned small model,
+Every condition that makes L3 pay is present: **one narrow task, a fine-tuned small model,
 enormous sustained volume, and utilization high enough to saturate the GPUs.**
 
 ## Example Where It Would NOT Work

@@ -1,7 +1,7 @@
 ---
 title: "Automated Prompt Optimization (DSPy / GEPA)"
 category: prompt-context
-maturityLevel: 4
+maturityLevel: 3
 maturityProvisional: false
 shortDescription: "Use an optimizer (DSPy MIPROv2 / GEPA) to search for prompts and few-shot sets that maximize a metric — including a token/cost term — so prompts become compiled artifacts that are shorter and let a cheaper model still pass the bar, instead of hand-tuned by trial and error."
 effort: High
@@ -21,9 +21,8 @@ measurementMethods:
 status: published
 lastUpdated: "2026-07-03"
 related:
-  - "visibility-measurement/quality-cost-evaluation-suite"
-  - "prompt-context/few-shot-example-pruning"
-  - "prompt-context/dynamic-few-shot-selection"
+  - "prompt-context/few-shot-example-selection"
+  - "prompt-context/few-shot-example-selection"
   - "prompt-context/learned-prompt-compression"
   - "fine-tuning/fine-tuning-cheaper-models"
 sources:
@@ -107,10 +106,10 @@ GEPA's maintainers report an open `gpt-oss-120b` optimized with GEPA **beating C
 hand-written string and becomes a **compiled artifact** that is re-derived when the metric,
 the data, or the model changes.
 
-This sits at **Level 4** because it is a real optimization loop, not prompt editing. It
+This sits at **L3** because it is a real optimization loop, not prompt editing. It
 needs three things a hand-tuning workflow does not: a **metric / eval harness** (the same
 asset an L2 quality-cost evaluation suite provides), a **training set**, and **optimizer
-compute** to run the search. It also carries L4 failure modes — overfitting to the eval
+compute** to run the search. It also carries L3 failure modes — overfitting to the eval
 set, opaque machine-written prompts, and brittleness across model swaps that forces
 **re-optimization**. It pays off on **stable, high-volume tasks** where a shorter prompt or
 a cheaper model compounds across millions of calls; below that volume, the L2 evaluation
@@ -176,7 +175,7 @@ Two compounding levers, both realized on *every production call* after the one-t
   GEPA beats Opus 4.1 at 90× cheaper" claim.[^gepa-site] Optimization "allows transferring a
   capability to cheaper models while retaining acceptable accuracy."[^kmad-ner]
 
-### Why this is genuinely L4 (the costs and the overfit trap)
+### Why this is genuinely L3 (the costs and the overfit trap)
 
 - **Optimizer compute.** Every trial is one or more full model calls over your data; large
   searches cost real money and time (the RL alternatives GEPA beats cost far more).[^gepa-paper]
@@ -208,7 +207,7 @@ frontier model with a long hand-tuned prompt full of few-shot examples.
   per-call savings (fewer input tokens **and** a cheaper model, potentially the reported
   order-of-magnitude gap)[^gepa-site] recur on every one of the millions of monthly calls.
   At that volume the optimizer compute is rounding error and the compounded inference
-  savings are the win — a textbook L4 fit: stable, high-volume, metric-gradeable.
+  savings are the win — a textbook L3 fit: stable, high-volume, metric-gradeable.
 
 ## Example Where It Would NOT Work
 

@@ -23,7 +23,6 @@ const techniques = defineCollection({
   schema: z.object({
     title: z.string(),
     category: z.enum([
-      'visibility-measurement',
       'model-routing',
       'prompt-context',
       'caching-reuse',
@@ -35,7 +34,7 @@ const techniques = defineCollection({
       'product-ux',
     ]),
     // Pyramid tier. Provisional until research confirms it.
-    maturityLevel: z.number().int().min(0).max(4),
+    maturityLevel: z.number().int().min(1).max(3),
     maturityProvisional: z.boolean().default(true),
 
     shortDescription: z.string(),

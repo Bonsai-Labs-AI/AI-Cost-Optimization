@@ -2,8 +2,8 @@
 // TAXONOMY — single source of truth for the research site.
 // Imported by both Astro (build) and scripts/generate-stubs.mjs (Node).
 //
-// - MATURITY_LEVELS: the 5 tiers of the pyramid (0..4).
-// - CATEGORIES: the 10 thematic groupings (used as filters/tags).
+// - MATURITY_LEVELS: the 3 tiers of the pyramid (0..2).
+// - CATEGORIES: the 9 thematic groupings (used as filters/tags).
 // - TECHNIQUES_BY_CATEGORY: every technique, with its category, slug, and
 //   maturity level. Levels were confirmed in the fine-grained review (see
 //   docs/DECISIONS.md and docs/TECHNIQUE_REVIEW.md); most are no longer
@@ -13,24 +13,17 @@
 // technique's markdown frontmatter, not here.
 // =============================================================================
 
-/** @typedef {0|1|2|3|4} Level */
+/** @typedef {1|2|3} Level */
 
 export const MATURITY_LEVELS = [
   {
-    level: 0,
-    name: 'Not Optimized',
-    tagline: 'Obvious waste exists',
-    description:
-      'No deliberate cost work. Default models, bloated prompts, no measurement. ' +
-      'Techniques here remove blatant waste and establish basic hygiene.',
-  },
-  {
     level: 1,
     name: 'Basic Optimization',
-    tagline: 'Low-effort, high-confidence wins',
+    tagline: 'Foundational hygiene & easy wins',
     description:
-      'The easy wins almost every product should adopt: right-sizing, exact and ' +
-      'prefix caching, output limits, structured outputs, basic guardrails.',
+      'Remove blatant waste and adopt the low-effort, high-confidence wins almost ' +
+      'every AI product should have: right-sizing, prompt cleanup, exact and prefix ' +
+      'caching, output limits, structured outputs, and basic budget guardrails.',
   },
   {
     level: 2,
@@ -43,28 +36,16 @@ export const MATURITY_LEVELS = [
   {
     level: 3,
     name: 'Highly Optimized',
-    tagline: 'Custom systems and specialized models',
+    tagline: 'Custom systems & the cost/quality frontier',
     description:
-      'Dynamic routing, semantic caching, fine-tuned task models, compression ' +
-      'pipelines. Meaningful engineering investment with strong ROI at scale.',
-  },
-  {
-    level: 4,
-    name: 'Near-Frontier / Adaptive',
-    tagline: 'Continuously self-optimizing',
-    description:
-      'Router-training flywheels, self-hosted fine-tuned models, calibrated ' +
-      'quantization/QAT, graph retrieval. The frontier of cost/quality.',
+      'Dynamic routing, semantic caching, fine-tuned and self-hosted models, ' +
+      'compression and graph-retrieval pipelines, calibrated quantization, and ' +
+      'router-training flywheels. Significant engineering investment with strong ROI ' +
+      'at scale — the frontier of cost/quality.',
   },
 ];
 
 export const CATEGORIES = [
-  {
-    slug: 'visibility-measurement',
-    label: 'Visibility & Measurement',
-    short: 'Visibility',
-    blurb: 'You cannot optimize what you cannot see. Observability, attribution, evals, guardrails.',
-  },
   {
     slug: 'model-routing',
     label: 'Model Choice & Routing',
@@ -126,58 +107,42 @@ const t = (slug, title, level) => ({ slug, title, level });
 
 // TECHNIQUES grouped by category slug. Levels confirmed in the review.
 export const TECHNIQUES_BY_CATEGORY = {
-  'visibility-measurement': [
-    t('token-cost-observability', 'Token & Cost Observability', 0),
-    t('cost-dashboards', 'Cost Dashboards', 0),
-    t('tag-based-cost-attribution', 'Tag-Based Cost Attribution', 1),
-    t('budget-limits-guardrails', 'Budget Limits & Guardrails', 1),
-    t('quality-cost-evaluation-suite', 'Quality–Cost Evaluation Suite', 2),
-    t('cost-regression-tests', 'Cost Regression Tests', 2),
-    t('cost-anomaly-detection', 'Cost Anomaly Detection', 2),
-    t('cache-hit-rate-instrumentation', 'Cache-Hit-Rate Instrumentation', 2),
-    t('unit-economics-cost-per-outcome', 'Unit Economics: Cost per Outcome', 3),
-  ],
   'model-routing': [
     t('model-right-sizing', 'Model Right-Sizing', 1),
-    t('provider-routing', 'Provider Routing', 2),
-    t('fallback-routing', 'Fallback Routing', 2),
+    t('provider-and-fallback-routing', 'Provider & Fallback Routing', 2),
     t('reasoning-token-budgeting', 'Reasoning / Thinking-Token Budgeting', 2),
     t('dynamic-model-routing', 'Dynamic Model Routing', 3),
     t('llm-cascades', 'LLM Cascades', 3),
     t('local-open-weight-substitution', 'Local / Open-Weight Model Substitution', 3),
-    t('router-training-from-traffic', 'Router Training From Production Traffic', 4),
+    t('router-training-from-traffic', 'Router Training From Production Traffic', 3),
   ],
   'prompt-context': [
-    t('prompt-cleanup', 'Prompt Cleanup', 0),
+    t('prompt-cleanup', 'Prompt Cleanup', 1),
     t('prompt-modularization', 'Prompt Modularization', 1),
     t('long-context-avoidance', 'Long-Context Avoidance', 1),
-    t('few-shot-example-pruning', 'Few-Shot Example Pruning', 2),
+    t('few-shot-example-selection', 'Few-Shot Example Selection & Pruning', 2),
     t('structured-context-packing', 'Structured Context Packing', 2),
-    t('context-window-budgeting', 'Context Window Budgeting', 2),
+    t('context-window-budgeting', 'Context Window Budgeting', 1),
     t('provider-native-context-management', 'Provider-Native Context Management', 2),
     t('learned-prompt-compression', 'Learned Prompt Compression (LLMLingua)', 3),
-    t('conversation-summarization', 'Conversation Summarization', 3),
-    t('context-pruning', 'Context Pruning', 3),
-    t('context-offloading', 'Context Offloading / Filesystem-as-Memory', 3),
-    t('dynamic-few-shot-selection', 'Dynamic Few-Shot Selection', 3),
-    t('automated-prompt-optimization', 'Automated Prompt Optimization (DSPy / GEPA)', 4),
+    t('context-reduction', 'Context Reduction', 2),
+    t('context-offloading', 'Context Offloading / Filesystem-as-Memory', 2),
+    t('automated-prompt-optimization', 'Automated Prompt Optimization (DSPy / GEPA)', 3),
   ],
   'caching-reuse': [
     t('prompt-caching-prefix-caching', 'Prompt Caching / Prefix Caching', 1),
-    t('exact-response-caching', 'Exact Response Caching', 2),
-    t('embedding-caching', 'Embedding Caching', 2),
+    t('exact-response-caching', 'Exact Response Caching', 1),
+    t('rag-pipeline-caching', 'RAG Pipeline Caching', 2),
     t('summary-caching', 'Summary Caching', 2),
     t('semantic-caching', 'Semantic Caching', 3),
-    t('retrieval-result-caching', 'Retrieval Result Caching', 3),
-    t('tool-result-caching', 'Tool Result Caching', 3),
+    t('tool-result-caching', 'Tool Result Caching', 2),
     t('cache-aware-agent-design', 'Cache-Aware Agent Design', 3),
-    t('cache-invalidation-strategies', 'Cache Invalidation Strategies', 3),
+    t('cache-invalidation-strategies', 'Cache Invalidation Strategies', 2),
   ],
   'batching-async': [
     t('batch-api-usage', 'Batch API Usage', 1),
     t('bulk-extraction-classification', 'Bulk Extraction / Classification Pipelines', 2),
-    t('latency-tiered-processing', 'Latency-Tiered Processing', 3),
-    t('pre-generation', 'Pre-Generation (Infra)', 3),
+    t('deferred-and-speculative-generation', 'Deferred & Speculative Generation', 2),
   ],
   rag: [
     t('metadata-filtering', 'Metadata Filtering Before Vector Search', 1),
@@ -185,48 +150,45 @@ export const TECHNIQUES_BY_CATEGORY = {
     t('chunking-parameter-tuning', 'Chunking-Parameter Tuning', 2),
     t('reranking-before-generation', 'Reranking Before Generation', 2),
     t('retrieval-chunk-deduplication', 'Retrieval-Time Chunk Deduplication', 2),
-    t('hierarchical-retrieval', 'Hierarchical Retrieval', 3),
-    t('precomputed-document-summaries', 'Precomputed Document Summaries', 3),
+    t('hierarchical-retrieval', 'Hierarchical Retrieval', 2),
+    t('precomputed-document-summaries', 'Precomputed Document Summaries', 2),
     t('embedding-quantization-mrl', 'Embedding Quantization & MRL Truncation', 3),
-    t('contextual-compression', 'Contextual Compression', 4),
-    t('graphrag-vs-vector-tradeoff', 'GraphRAG vs Vector Tradeoff', 4),
+    t('contextual-compression', 'Contextual Compression', 3),
+    t('graphrag-vs-vector-tradeoff', 'GraphRAG vs Vector Tradeoff', 3),
   ],
   output: [
-    t('output-length-control', 'Output Length Control', 0),
+    t('output-length-control', 'Output Length Control', 1),
     t('structured-outputs', 'Structured Outputs', 1),
-    t('max-token-policies', 'Max-Token Policies by Task Type', 1),
     t('verbosity-controls', 'Verbosity Controls', 1),
     t('streaming-with-early-stop', 'Streaming With Early Stop', 2),
-    t('template-plus-fill', 'Template-Plus-Fill Generation', 2),
+    t('template-plus-fill', 'Template-Plus-Fill Generation', 1),
     t('post-processing-instead-of-generation', 'Post-Processing Instead of Generation', 2),
     t('constrained-decoding', 'Constrained Decoding / Grammars', 3),
   ],
   'fine-tuning': [
     t('fine-tuning-cheaper-models', 'Fine-Tuning Cheaper Models', 3),
-    t('task-specific-classifiers', 'Task-Specific Classifiers', 3),
-    t('task-specific-extractors', 'Task-Specific Extractors', 3),
+    t('task-specific-lightweight-models', 'Task-Specific Lightweight Models', 3),
     t('specialized-embedding-models', 'Specialized Embedding Models', 3),
-    t('local-model-deployment', 'Local Model Deployment', 4),
-    t('calibrated-quantization', 'Calibrated Quantization (GPTQ / AWQ / QAT)', 4),
-    t('multi-lora-serving', 'Multi-LoRA Serving', 4),
+    t('local-model-deployment', 'Local Model Deployment', 3),
+    t('calibrated-quantization', 'Calibrated Quantization (GPTQ / AWQ / QAT)', 3),
+    t('multi-lora-serving', 'Multi-LoRA Serving', 3),
   ],
   'agent-workflow': [
     t('agent-budget-guardrails', 'Agent Budget Guardrails', 1),
-    t('tool-use-minimization', 'Tool-Use Minimization', 2),
+    t('tool-use-minimization', 'Tool-Use Minimization', 1),
     t('human-in-the-loop-checkpoints', 'Human-in-the-Loop Checkpoints', 2),
-    t('state-compression-for-agents', 'State Compression for Agents', 3),
-    t('reusable-memory-artifact-store', 'Reusable Memory / Artifact Store', 3),
-    t('workflow-decomposition', 'Workflow Decomposition', 3),
-    t('programmatic-tool-calling', 'Programmatic Tool Calling (Code Execution with MCP)', 4),
-    t('specialized-sub-agents', 'Specialized Sub-Agents', 4),
+    t('agent-memory-management', 'Agent Memory Management', 2),
+    t('workflow-decomposition', 'Workflow Decomposition', 2),
+    t('programmatic-tool-calling', 'Programmatic Tool Calling (Code Execution with MCP)', 3),
+    t('specialized-sub-agents', 'Specialized Sub-Agents', 3),
   ],
   'product-ux': [
     t('ai-feature-gating', 'AI Feature Gating', 1),
     t('user-controlled-quality-mode', 'User-Controlled Quality Mode', 2),
-    t('ai-non-ai-hybrid-ux', 'AI / Non-AI Hybrid UX', 2),
+    t('ai-non-ai-hybrid-ux', 'AI / Non-AI Hybrid UX', 1),
     t('precomputed-content-surfacing', 'Precomputed Content Surfacing', 2),
     t('agent-scope-confirmation', 'Agent Scope / Plan Confirmation', 2),
-    t('cost-aware-product-tiers', 'Cost-Aware Product Tiers', 3),
+    t('cost-aware-product-tiers', 'Cost-Aware Product Tiers', 2),
   ],
 };
 

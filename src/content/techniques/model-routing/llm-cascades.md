@@ -23,7 +23,6 @@ lastUpdated: "2026-07-03"
 related:
   - "model-routing/dynamic-model-routing"
   - "model-routing/model-right-sizing"
-  - "visibility-measurement/quality-cost-evaluation-suite"
   - "model-routing/router-training-from-traffic"
 sources:
   - id: frugalgpt

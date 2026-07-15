@@ -23,8 +23,7 @@ lastUpdated: "2026-07-03"
 related:
   - "model-routing/model-right-sizing"
   - "model-routing/llm-cascades"
-  - "model-routing/provider-routing"
-  - "visibility-measurement/quality-cost-evaluation-suite"
+  - "model-routing/provider-and-fallback-routing"
   - "fine-tuning/router-training-from-traffic"
 sources:
   - id: routellm-paper

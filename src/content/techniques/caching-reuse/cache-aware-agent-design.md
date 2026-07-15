@@ -24,7 +24,7 @@ related:
   - "caching-reuse/cache-hit-rate-instrumentation"
   - "caching-reuse/tool-result-caching"
   - "prompt-context/structured-context-packing"
-  - "agent-workflow/state-compression-for-agents"
+  - "agent-workflow/agent-memory-management"
 sources:
   - id: manus
     title: "Context Engineering for AI Agents: Lessons from Building Manus"

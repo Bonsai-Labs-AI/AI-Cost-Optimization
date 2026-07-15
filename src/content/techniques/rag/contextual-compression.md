@@ -1,7 +1,7 @@
 ---
 title: "Contextual Compression"
 category: rag
-maturityLevel: 4
+maturityLevel: 3
 maturityProvisional: false
 shortDescription: "Compress retrieved context conditioned on the query — keeping only the query-relevant spans (extractive) or rewriting chunks to the query (abstractive) — before it reaches the expensive generator, cutting generation-context tokens beyond what reranking or dedup achieve."
 effort: High
@@ -113,7 +113,7 @@ with minimal accuracy loss, and query-aware token compression (LongLLMLingua) ru
 roughly **4x** (about one-quarter of the tokens) while *improving* NaturalQuestions
 accuracy by up to 21.4%.[^recomp][^longllmlingua]
 
-The reason this sits at **Level 4** rather than alongside L2 reranking is the caveat
+The reason this sits at **L3** rather than alongside L2 reranking is the caveat
 that runs through the rest of this page: compression is **an extra model call with its
 own cost and latency**, and it competes against two things that are often cheaper —
 cheap long-context input (especially when the context prefix-caches) and plain L2
@@ -180,7 +180,7 @@ The compressor is a **second model in the request path**. The honest ledger is:
 - **`LLMChainExtractor` on a large model, one call per chunk** → the ledger can go
   **negative**: you may spend as much compressing as you saved generating.[^langchain-ccr]
 
-### The L4 caveat: when compression does NOT pay
+### The L3 caveat: when compression does NOT pay
 
 Three conditions each kill the ROI:
 
@@ -201,7 +201,7 @@ Three conditions each kill the ROI:
    and generic summarization **flipped 31% of model rankings**.[^fixed-compression-bench]
    So a compressor tuned once and left alone can silently cap the quality of your best
    model — you must re-validate it per generator, which is part of why this is a
-   maintained L4 system, not a config flag.
+   maintained L3 system, not a config flag.
 
 ### The scale gate
 

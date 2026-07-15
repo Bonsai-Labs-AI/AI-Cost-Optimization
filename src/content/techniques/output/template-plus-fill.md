@@ -1,7 +1,7 @@
 ---
 title: "Template-Plus-Fill Generation"
 category: output
-maturityLevel: 2
+maturityLevel: 1
 maturityProvisional: false
 shortDescription: "Have the model emit only the variable fields of a document and let deterministic code render the fixed boilerplate around them — so the LLM writes ~50 tokens instead of ~800 on repetitive structured outputs."
 effort: Medium
@@ -94,7 +94,7 @@ of input tokens** — Anthropic's Opus 4.8 is $5/M input vs **$25/M output** (5�
 is $3 vs $15 — so trimming generated text has an outsized effect on cost.[^anthropic-pricing][^pristren-output]
 Because the template is deterministic and only slot *content* is model-generated, quality
 risk is low: the boilerplate can no longer drift, be mis-formatted, or hallucinate. It sits
-at **Level 2** because doing it well requires real (but modest) engineering — designing the
+at **L1** because doing it well requires real (but modest) engineering — designing the
 templates, defining a slot schema, and wiring structured outputs — rather than a config
 toggle.
 
