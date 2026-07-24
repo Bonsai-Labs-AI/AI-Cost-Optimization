@@ -3,7 +3,7 @@ title: "Prompt Modularization"
 category: prompt-context
 maturityLevel: 1
 maturityProvisional: false
-shortDescription: "Compose prompts from reusable, independently-editable blocks (system / tools / policy / examples) ordered static-first, volatile-last — so the shared prefix stays byte-stable and maximizes prompt-cache hits, with deduplication and maintainability as the secondary wins."
+shortDescription: "Build prompts from reusable, independently-editable blocks (system / tools / policy / examples) ordered static-first, volatile-last — so the shared prefix stays byte-identical and prompt caching can hit, with less duplication and easier maintenance as the secondary wins."
 effort: Low
 gain: Low
 riskToQuality: Low
@@ -75,13 +75,13 @@ A prompt is rarely one monolithic string. In production it is an assembly of dis
 parts: a system/role block, tool and function definitions, a policy or guardrail block,
 a set of few-shot examples, retrieved context, and finally the per-request user input.
 **Prompt modularization** is the practice of building the prompt by *composing named,
-reusable, independently-editable blocks* — and, critically, ordering those blocks so the
-shared, unchanging ones form a stable prefix and the volatile ones come last.
+reusable, independently-editable blocks* — and ordering those blocks so the shared,
+unchanging ones form a stable prefix and the volatile ones come last.
 
 The honest framing up front: modularization is **largely an enabler, not a direct cost
 saver**. Splitting a prompt into blocks does not, by itself, reduce token count — the same
 tokens still go over the wire. Its gain is **Low–Medium**, and it earns that score in two
-indirect ways. First and most importantly, a clean static/volatile split is what makes
+indirect ways. First, a clean static/volatile split is what makes
 **prompt caching** actually pay off: caches only hit on a byte-identical contiguous prefix,
 so the discipline of "static blocks first, volatile data last" is the precondition for a
 high cache-hit rate.[^openai-pc-docs][^anthropic-pc] Second, reusable blocks remove
@@ -100,7 +100,7 @@ the real savings.
 
 ### Order blocks static-first, volatile-last
 
-The single rule that converts modularization into cost savings is ordering. Caching works
+The rule that converts modularization into cost savings is ordering. Caching works
 only on an exact-match **contiguous prefix**; the moment the token stream diverges from the
 cached version, everything after that point is recomputed at full price.[^openai-pc-docs]
 So arrange blocks from most-stable to most-volatile:
@@ -119,8 +119,9 @@ come from caching, which the modular ordering unlocks.[^kvcache-bench]
 The classic failure mode this prevents: putting a per-second timestamp or a user name at the
 **top** of the system block. Manus calls this out directly — "A common mistake is including
 a timestamp ... at the beginning of the system prompt" — because a single-token change
-invalidates the entire downstream cache.[^manus-context] Move volatile values into the user
-message or the tail of the prompt where they belong.[^kvcache-bench]
+invalidates the entire downstream cache.[^manus-context] We've found this exact mistake in
+client codebases more than once. Move volatile values into the user message or the tail of
+the prompt where they belong.[^kvcache-bench]
 
 ### Make blocks byte-stable and deterministic
 
@@ -128,7 +129,7 @@ A "reusable block" only caches if it serializes **identically** every call. Two 
 requirements:
 
 - **Deterministic serialization.** Many languages don't guarantee stable JSON key ordering;
-  non-deterministic key order silently breaks the prefix match. Sort keys
+  non-deterministic key order breaks the prefix match. Sort keys
   (`json.dumps(data, sort_keys=True)`) and pin whitespace/formatting for any structured block
   embedded in the prompt.[^manus-context][^kvcache-bench]
 - **Append-only context** for multi-turn and agent loops. Never rewrite earlier blocks or
@@ -181,13 +182,12 @@ Refactoring to modular blocks: a single canonical `policy` partial and `tools` p
 by all three features, ordered system → tools → policy → examples → user input, with the
 timestamp moved into the user turn. Two things follow. The drift is gone — one edit to the
 policy block now updates all three features, and the number of distinct prompt prefixes in
-production collapses to a handful of byte-identical variants. More importantly, those identical
+production collapses to a handful of byte-identical variants. The bigger effect: those identical
 prefixes now **cache**: where the timestamp-at-the-top version got a 0% cache rate, the stable
 prefix reaches the 80%+ range, and because the input-to-output ratio in these features is high
 (the shared prefix dwarfs the short user turn), the cached prefix bills at ~0.1× and blended
 input cost drops sharply.[^kvcache-bench][^anthropic-pc] The savings are *caching's*, but they
-were unreachable until the prompt was modularized and ordered correctly — that is the enabler
-relationship in action.[^manus-context]
+were out of reach until the prompt was modularized and ordered correctly.[^manus-context]
 
 ## Example Where It Would NOT Work
 

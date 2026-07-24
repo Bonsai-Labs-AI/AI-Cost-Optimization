@@ -136,13 +136,13 @@ An agent works by looping: call a model, pick a tool, get a result, append it to
 context, repeat. That loop has a compounding cost problem on two timescales.
 
 **Within a run**, every step re-sends the entire history to date — past reasoning, every
-tool call, and, worst of all, every raw tool **output** (search results, file contents,
-API payloads) pile up and are re-billed at full input price on each subsequent
+tool call, and every raw tool **output** (search results, file contents,
+API payloads) — all re-billed at full input price on each subsequent
 step.[^anthropic-context-engineering] On a run of *n* steps where history grows by a
 roughly constant amount each step, **cumulative input tokens scale on the order of n²**.
 A 40-step agent does not cost 40× a single step — by step 39, the model is paying to
 re-read almost everything the first 38 steps produced. Left unmanaged, the run eventually
-hits the context-window limit and dies of context exhaustion.
+hits the context-window limit and fails from context exhaustion.
 
 **Across runs**, most agents are stateless between sessions: they start every new run
 from a cold context, re-read the same codebase, re-summarize the same documents,
@@ -157,11 +157,11 @@ Agent memory management addresses both problems through two complementary moves:
 - **Store and reuse** — externalize completed work (artifacts, facts, decisions) to a
   durable store so a later step or a later session can retrieve rather than re-derive it.
 
-Together they convert the O(n²) within-run blow-up into something close to linear, and
-turn each run's output into an asset that amortizes across future runs. This is **L2**
+Together they turn the O(n²) within-run growth into something close to linear, and
+make each run's output reusable across future runs instead of thrown away. This is **L2**
 work — real engineering, not a config flag — but with strong off-the-shelf entry points
-(provider-native compaction, context editing, and the memory tool) that substantially lower
-the build cost.
+(provider-native compaction, context editing, and the memory tool) that lower the build
+cost. In our client work, long-running agents are where this bites first.
 
 ## Detailed Approach & Techniques
 
@@ -176,7 +176,7 @@ practitioner rule of thumb is to **trigger at ~70% of the context budget** and c
 old conversation turns at **3:1–5:1** while leaving the last 5–7 turns
 untouched.[^zylos-compression]
 
-The key cost caveat: the summarization is **its own model call**, billed as a separate
+One cost caveat: the summarization is **its own model call**, billed as a separate
 sampling iteration not included in the top-level token counts — you must sum
 `usage.iterations` to get the real total.[^anthropic-compaction] Compress too often on too
 little and the summary calls eat the savings.
@@ -209,7 +209,7 @@ Compression's limit is that anything you drop is gone. The escape hatch is to mo
 **memory tool** (`memory_20250818`, GA on the Messages API, Claude 4+) lets the agent write
 notes, progress, and artifacts to a `/memories` directory that **persists between sessions**;
 when the tool is present, Claude automatically reads its memory directory before acting.
-Crucially, the store is **client-side** — Claude requests `create`/`view`/`str_replace`/
+The store is **client-side** — Claude requests `create`/`view`/`str_replace`/
 `delete`/`rename` operations, your application executes them against storage you control
 (a per-user directory, S3, or a database), so you own retention, size caps, and
 expiry.[^anthropic-memory-tool]
@@ -260,7 +260,7 @@ baseline — in a **100-turn web-search evaluation, context editing cut token co
 84%** while letting agents finish runs that would otherwise have died of context
 exhaustion.[^anthropic-context-management-announce]
 
-The caution is symmetric. Compression that drops a detail a later step needs causes
+The risk cuts the other way. Compression that drops a detail a later step needs causes
 **context drift** — drift and memory-loss in multi-step reasoning was blamed for roughly
 **65% of enterprise-AI failures in 2025**.[^zylos-compression] The right strategy: compress
 for recall first (capture everything relevant), then tighten for

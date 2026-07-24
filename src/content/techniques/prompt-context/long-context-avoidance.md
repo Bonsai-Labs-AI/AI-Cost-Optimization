@@ -92,15 +92,16 @@ whole documents, entire knowledge bases, or full conversation history into the w
 chance it might be relevant — and instead retrieving, chunking, and summarizing so each call
 carries only the high-signal tokens the task actually needs.
 
-The cost problem is that "just paste it all in" is the default a team reaches for first, and
-it is silently expensive: input tokens balloon, the bill scales with how much context you
-*could* attach rather than how much the answer *uses*, and the waste compounds on every call
-of a high-traffic feature. The counter-intuitive part — and the reason this sits at **Level 1**
-rather than being a pure cost trade-off — is that trimming the context usually **improves
-quality too**. Models do not use a long context uniformly: accuracy is highest for facts at
-the very beginning or end of the input and degrades for anything in the middle (the
-"lost-in-the-middle" U-curve), and this holds even at the 128K+ windows that are standard in
-2026.[^lost-in-middle][^nolima] More starkly, sheer input length hurts *independent of
+The cost problem is that "just paste it all in" is the default a team reaches for first:
+input tokens balloon, the bill scales with how much context you *could* attach rather than
+how much the answer *uses*, and the waste repeats on every call of a high-traffic feature.
+In our client work, this pattern shows up in almost every first prompt audit. The
+counter-intuitive part — and the reason this sits at **Level 1** rather than being a pure
+cost trade-off — is that trimming the context usually **improves quality too**. Models do
+not use a long context uniformly: accuracy is highest for facts at the very beginning or
+end of the input and degrades for anything in the middle (the "lost-in-the-middle"
+U-curve), and this holds even at the 128K+ windows that are standard in
+2026.[^lost-in-middle][^nolima] Worse, sheer input length hurts *independent of
 retrieval* — even with the right evidence placed immediately before the question, performance
 degrades as the surrounding context grows.[^length-hurts] So padding the window with "context
 just in case" both costs more and dilutes the answer. Avoiding it is one of the rare levers
@@ -119,7 +120,7 @@ outcome."[^anthropic-context-eng] Concretely, that means replacing each "dump" p
 - **Documents → retrieved chunks.** Instead of pasting a full PDF or wiki page, index it and
   retrieve only the passages relevant to the query (the RAG pattern). The companion lever is to
   keep `top_k` small — retrieved context typically dwarfs the question in token count, so cutting
-  the number of chunks passed to generation is the single highest-ROI knob (see *Reducing
+  the number of chunks passed to generation is usually the highest-ROI knob (see *Reducing
   Retrieved Chunk Count*).
 - **Full history → running summary + recent turns.** In multi-turn chat and agents, don't re-send
   the entire transcript every step. Keep the last few messages verbatim and a compact rolling

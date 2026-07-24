@@ -10,7 +10,7 @@ riskToQuality: Medium
 detectionSignals:
   - "One big autonomous agent is used for a task that is really a fixed pipeline (the same 3–6 steps run in the same order every time)."
   - "A frontier model runs every step, including trivial ones (extraction, formatting, classification, routing)."
-  - "Agent loops are unbounded — no step ceiling or token budget — and occasionally 'wander,' retry, or spiral."
+  - "Agent loops are unbounded — no step ceiling or token budget — and occasionally wander off, retry, or loop without end."
   - "High token use on structurally repetitive work; per-task cost is many multiples of a single call because the whole history re-inflates every step."
 measurementMethods:
   - "$/task for the decomposed workflow vs. the monolithic agent, at a held quality bar."
@@ -21,7 +21,6 @@ measurementMethods:
 status: published
 lastUpdated: "2026-07-03"
 related:
-  - "agent-workflow/agent-memory-management"
   - "agent-workflow/agent-memory-management"
   - "model-routing/dynamic-model-routing"
   - "batching-async/deferred-and-speculative-generation"
@@ -97,7 +96,7 @@ The cost problem it solves is specific and large. An open agent loop **re-bills 
 growing conversation history on every step**, so input-token cost grows *quadratically*:
 a 20-step loop at 1,000 tokens/step produces ~**210,000** cumulative input tokens, not the
 ~20,000 a per-step estimate suggests.[^augment-loop-cost] On top of that it runs a frontier
-model on trivial steps and can **wander, retry, and spiral** with no natural stopping point.
+model on trivial steps and can **wander, retry, and loop** with no natural stopping point.
 The result is that agentic tasks routinely cost **5–25× more per task** than a non-agentic
 equivalent,[^techahead-inference] with model-token cost the **dominant line item** — each step
 re-sends a growing context to a frontier model.[^augment-loop-cost] So per-step token count and
@@ -107,7 +106,8 @@ input tokens from scheduling/decomposition.[^faas-agentic]
 
 This is **Level 2**: it is real engineering (orchestration code, per-step prompts, an eval
 harness to prove the workflow matches the agent), and the ROI is strongest at scale on a
-task you run over and over.
+task you run over and over. We've watched plenty of client "agents" turn out to be fixed
+pipelines wearing a loop.
 
 ## Detailed Approach & Techniques
 
@@ -158,8 +158,8 @@ Three effects compound in a monolithic agent, and decomposition attacks each:
    line in agentic systems,[^augment-loop-cost] this mix change is most of the win. (This is the per-step
    application of *model right-sizing* and *dynamic model routing*.)
 
-3. **Bounded steps stop the spiral.** A fixed workflow has a known number of calls; it
-   cannot decide to retry-and-retry until the wallet empties. A controlled study of
+3. **Bounded steps stop the runaway loop.** A fixed workflow has a known number of calls; it
+   cannot decide to retry-and-retry until the budget is gone. A controlled study of
    deterministic (code-orchestrated) vs. LLM-controlled orchestration on a real modernization
    task found deterministic execution cut token consumption by **up to 3.5×** *at comparable
    correctness*, with **less run-to-run variability** — the consistency benefit, not just the

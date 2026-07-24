@@ -88,7 +88,7 @@ sources:
 
 A **router** sits in front of several models and decides, per request, which tier to
 send it to — a cheap small model for the easy 80% and an expensive frontier model only
-for the genuinely hard requests. Getting that decision right is the whole game of
+for the genuinely hard requests. Getting that decision right is the core of
 [dynamic model routing](/techniques/model-routing/dynamic-model-routing/): route too
 aggressively to the cheap tier and quality drops; route too conservatively and you pay
 frontier prices for work a small model could have done.

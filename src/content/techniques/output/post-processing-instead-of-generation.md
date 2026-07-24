@@ -107,12 +107,13 @@ code does everything mechanical afterwards**. The model returns a small structur
 payload — the facts, the decisions, the raw values — and your application sorts,
 computes, formats, and renders it.
 
-This is a rare **double win**. Code is deterministic and correct; an LLM is a statistical
-text predictor that "language is statistical, arithmetic is rule based"[^moveo-why] — it
-pattern-matches numbers and formats and is *unreliable* at exactly the tasks code nails.
-So moving mechanical work into code **cuts cost** (fewer output tokens, no repair passes)
-**and raises quality** (the arithmetic is now always right, the format always valid) at
-the same time.[^openai-so-announce][^moveo-why] It sits at **Level 2** because doing it
+This cuts cost and raises quality at the same time. Code is deterministic and correct; an
+LLM is a statistical text predictor — "language is statistical, arithmetic is rule
+based"[^moveo-why] — so it pattern-matches numbers and formats and is *unreliable* at
+exactly the tasks code nails. Moving mechanical work into code **cuts cost** (fewer output
+tokens, no repair passes) **and raises quality** (the arithmetic is now always right, the
+format always valid).[^openai-so-announce][^moveo-why] Asking the model to do arithmetic or
+sorting it has no business doing is something we flag on most codebases we review. It sits at **Level 2** because doing it
 well is deliberate engineering — you have to identify the deterministic seams, design the
 structured payload, and build the rendering code — not a config toggle.
 

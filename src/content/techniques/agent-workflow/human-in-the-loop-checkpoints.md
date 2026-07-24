@@ -3,7 +3,7 @@ title: "Human-in-the-Loop Checkpoints"
 category: agent-workflow
 maturityLevel: 2
 maturityProvisional: false
-shortDescription: "Insert cheap human approval gates before expensive, irreversible, or long-running agent actions so the agent doesn't burn tokens (or do damage) on the wrong path without a confirmation."
+shortDescription: "Insert cheap human approval gates before expensive, irreversible, or long-running agent actions so the agent doesn't spend tokens (or do damage) on the wrong path without a confirmation."
 effort: Medium
 gain: Medium
 riskToQuality: Low
@@ -81,19 +81,20 @@ feeds the result back, and repeats — often for dozens or hundreds of steps. Be
 agent architectures resend the whole accumulated context on every step, cost grows
 super-linearly with loop length: one write-up measures an agent loop at roughly **3.2× a
 plain chatbot at 5 steps, more than 30× at 50 steps, and more than 100× at 200 steps** for
-the same underlying task.[^leanops-runaway] The danger is that this spend is **unattended** —
-if the agent takes a wrong turn or gets stuck retrying a failing action, it can burn a large
+the same underlying task.[^leanops-runaway] The problem is that this spend is **unattended** —
+if the agent takes a wrong turn or gets stuck retrying a failing action, it can run up a large
 bill before any human sees it. The same source reports a single developer running up
 **$4,200 in API fees over one long weekend** on an autonomous refactoring run.[^leanops-runaway]
 
 **Human-in-the-loop (HITL) checkpoints** insert a cheap human approval gate at the points
 where an agent is about to do something *expensive or irreversible*: kick off a long
 autonomous run, take a costly branch mid-run, or call a high-stakes tool (a bulk job, a mass
-email, a delete, a deploy, a financial transaction). The economics are lopsided: a human
-"yes / no" costs seconds and effectively **zero tokens**, while the run it authorizes — or,
-crucially, the run it *cancels* — can be worth many dollars of model calls plus the real-world
+email, a delete, a deploy, a financial transaction). The trade is one-sided: a human
+"yes / no" costs seconds and effectively **zero tokens**, while the run it authorizes — or
+the run it *cancels* — can be worth many dollars of model calls plus the real-world
 cost of a wrong irreversible action.[^leanops-runaway][^openai-approvals] This is why every
-major agent framework and provider now ships a first-class HITL/approval primitive.
+major agent framework and provider now ships an HITL/approval primitive. In our client
+work, deciding which actions deserve a gate is one of the first things we sort out.
 
 This technique absorbs **expensive-action confirmation**. It sits at **Level 2** because
 doing it well is deliberate engineering — you must decide *which* actions to gate, wire a
@@ -123,7 +124,7 @@ users don't route around it.
    and financial transactions should not fire unattended. OpenAI's approvals guidance
    recommends flagging exactly these — *irreversible* (cancellations, deletions), *expensive*
    (financial transactions), and *sensitive* (data modifications, shell commands) — for human
-   review.[^openai-approvals] Anthropic's trustworthy-agents framework gives the canonical
+   review.[^openai-approvals] Anthropic's trustworthy-agents framework gives a clear
    example: an agent that finds wasteful software spend must get **human approval before
    cancelling subscriptions or downgrading tiers**, and Claude Code ships read-only by default,
    asking approval before any action that modifies code or systems.[^anthropic-trustworthy]
@@ -147,7 +148,7 @@ users don't route around it.
   rejects each interruption and passes `state` back to continue *the same run*, not a new turn.
   Because `state` is serializable, the human review can happen asynchronously.[^openai-approvals][^openai-hitl-js]
 
-The argument-conditional predicate is the key to keeping this cheap: you don't gate *every*
+The argument-conditional predicate is what keeps this cheap: you don't gate *every*
 step (that destroys the point of an agent) — you gate only the steps whose expected cost, in
 tokens or in real-world consequence, exceeds the cost of a human glance.[^langchain-hitl][^openai-approvals]
 
@@ -191,7 +192,7 @@ Adding HITL checkpoints:
 Now, when the agent proposes the wrong migration, an engineer **rejects it in seconds** with
 feedback, and the run corrects course instead of burning 40 more iterations down a dead end.
 The gate cost a few seconds of human time; it saved both the wasted autonomous spend and a
-production incident — the asymmetric trade the pattern is built for.[^openai-approvals][^anthropic-trustworthy]
+production incident.[^openai-approvals][^anthropic-trustworthy]
 
 ## Example Where It Would NOT Work
 

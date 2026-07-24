@@ -120,6 +120,7 @@ export const TECHNIQUES_BY_CATEGORY = {
     t('prompt-cleanup', 'Prompt Cleanup', 1),
     t('prompt-modularization', 'Prompt Modularization', 1),
     t('long-context-avoidance', 'Long-Context Avoidance', 1),
+    t('token-efficient-serialization', 'Token-Efficient Serialization', 1),
     t('few-shot-example-selection', 'Few-Shot Example Selection & Pruning', 2),
     t('structured-context-packing', 'Structured Context Packing', 2),
     t('context-window-budgeting', 'Context Window Budgeting', 1),
@@ -184,6 +185,7 @@ export const TECHNIQUES_BY_CATEGORY = {
   ],
   'product-ux': [
     t('ai-feature-gating', 'AI Feature Gating', 1),
+    t('bring-your-own-key', 'Bring-Your-Own-Key (BYOK)', 1),
     t('user-controlled-quality-mode', 'User-Controlled Quality Mode', 2),
     t('ai-non-ai-hybrid-ux', 'AI / Non-AI Hybrid UX', 1),
     t('precomputed-content-surfacing', 'Precomputed Content Surfacing', 2),

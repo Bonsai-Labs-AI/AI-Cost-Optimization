@@ -110,8 +110,8 @@ single 80 GB GPU; you are forced onto two (or a bigger, scarcer card), and your 
 is throttled by how fast those weights and the KV cache stream through memory.
 
 **Calibrated quantization** shrinks that footprint by storing weights (and sometimes
-activations and the KV cache) in **INT8, INT4, or FP8** instead of 16-bit floats. The word
-that matters is *calibrated*: naive rounding to 4 bits wrecks quality, so these methods run
+activations and the KV cache) in **INT8, INT4, or FP8** instead of 16-bit floats. The key word
+is *calibrated*: rounding naively to 4 bits degrades quality badly, so these methods run
 a small **calibration dataset** through the model to measure where precision actually
 matters and protect it. The result is the *same* model on **half or a quarter** the memory,
 running at **~1.8–2.4× the throughput**, with **>99% of the original accuracy** on the
@@ -151,9 +151,9 @@ quantization has broken quality and you need to recover it.[^llm-qat]
   loss, demonstrated up to a **530B** model on a single node.[^smoothquant]
 
 These three are **post-training** (PTQ): you run a modest calibration set (a few hundred
-samples) through the model once, and the calibration is where "calibrated" quantization
-earns its name — the KV-cache/FP8 flows explicitly recommend **dataset-based calibration
-over random-token calibration** for quality.[^vllm-fp8kv]
+samples) through the model once, and that calibration step is what protects quality — the
+KV-cache/FP8 flows explicitly recommend **dataset-based calibration
+over random-token calibration**.[^vllm-fp8kv]
 
 ### The hardest L3 piece: Quantization-Aware Training (QAT)
 
@@ -228,7 +228,7 @@ memory.[^vllm-quant][^vllm-fp8kv] If a first pass to INT4 nicks quality on a cri
 - **A small model pushed too far.** Aggressive **W4 activations** or 2-bit on a fragile **7B**
   model can drop quality below bar; PTQ "breaks down at lower bit precision,"[^llm-qat] and
   under-calibrated quantization degrades outputs. Without a task eval to confirm ≥99%
-  recovery, you can silently ship a worse model. Here, staying at INT8/FP8 (or investing in
+  recovery, you can ship a worse model without noticing. Here, staying at INT8/FP8 (or investing in
   QAT) beats a cheap-but-broken INT4.
 - **Reaching for QAT when AWQ already suffices.** If post-training AWQ/GPTQ already holds
   quality (the common case at 8-bit and often 4-bit on large models), the QAT retraining is

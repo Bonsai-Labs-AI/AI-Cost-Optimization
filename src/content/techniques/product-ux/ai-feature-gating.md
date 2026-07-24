@@ -8,7 +8,7 @@ effort: Low
 gain: High
 riskToQuality: Low
 effortWhy: "All three core moves — gating on click, debouncing, eligibility checks — are Level-1-effort changes that bind a call to a deliberate action."
-gainWhy: "It eliminates whole classes of calls nobody asked for; debouncing alone can cut ambient call volume by ~85%, decisive at thin AI margins."
+gainWhy: "It eliminates whole classes of calls nobody asked for; debouncing alone can cut ambient call volume by ~85%, which matters at thin AI margins."
 riskWhy: "The visible product is unchanged for an engaged user; only calls that were never wanted are removed, so quality is untouched."
 detectionSignals:
   - "Fires on render — an AI call runs automatically on page-load, tab-focus, or render, before the user has asked for anything."
@@ -80,12 +80,13 @@ sources:
 
 ## Overview
 
-Most cost techniques in this catalog make each AI call *cheaper*. Feature gating attacks a
+Most cost techniques in this catalog make each AI call *cheaper*. Feature gating targets a
 different problem: the call that should never have happened at all. The cheapest token is the
 one you never generate, and the largest pool of wasted spend in many AI products is inference
 fired **without an explicit, eligible user action** — a model invoked on page-load before the
 user has asked for anything, an "as-you-type" feature calling the API on every keystroke, or an
-expensive generation a user triggered by accident.
+expensive generation a user triggered by accident. In our client work, this is usually one of
+the first places we look for waste.
 
 **AI feature gating** is the discipline of putting a gate in front of every expensive call:
 fire it only on a deliberate user action (a button, a CTA, a "Generate" press), only for users
@@ -95,15 +96,15 @@ run** (a scope/cost confirmation in front of a long generation, an agent loop, o
 and it includes the **debounce/throttle** sub-pattern for ambient features that listen to
 continuous input.
 
-The reason this sits at **Level 1** — a basic, high-confidence win — is economic. Unlike
+This sits at **Level 1** — a basic, high-confidence win — for an economic reason. Unlike
 traditional SaaS, where the marginal cost of an extra active user is close to zero, an AI
 feature adds a **per-use variable cost that scales with engagement**: the same engagement you
 worked to grow now drives the bill.[^revenuecat-margins] RevenueCat's worked example puts a
 modest $0.18/user/month AI cost at about **3% of revenue at $6 ARPU**, but the *same* cost
 structure at $3.50 ARPU with $0.60/user lands at **17% of revenue** — the difference between a
 healthy feature and one that eats the margin.[^revenuecat-margins] When "every free generation
-costs someone real money,"[^revenuecat-pricing] eliminating calls nobody asked for is not
-polish — it is survival.
+costs someone real money,"[^revenuecat-pricing] removing calls nobody asked for goes
+straight to margin.
 
 ## Detailed Approach & Techniques
 
@@ -114,9 +115,9 @@ action, never a side-effect of a render or a keystroke.** Four patterns implemen
 
 Bind the call to an intentional user gesture — a "Summarize," "Generate," or "Ask AI" button —
 rather than to a lifecycle event like page-load, route change, tab-focus, or component mount.
-This is the single highest-leverage move, because a call that fires on render runs for **every
+This is usually the biggest win of the four, because a call that fires on render runs for **every
 visitor whether or not they wanted the feature**, including bounced sessions and bots. Replacing
-"summarize on open" with "summarize on click" can collapse a feature's call volume by the share
+"summarize on open" with "summarize on click" can cut a feature's call volume by the share
 of users who never engage it — often the majority. RevenueCat describes the same idea as
 "demo without inference": let users experience the feature's surface (stock examples, cached
 samples) during onboarding and only spend a real inference call once they explicitly opt in.[^revenuecat-pricing]
@@ -161,7 +162,7 @@ ten-character query can fire ten calls when one was needed.
 The interval is a UX/cost tradeoff. Around **300 ms** is the common sweet spot for typing: long
 enough to coalesce a burst, short enough to still feel instant. Search-UI guidance favors roughly
 **200 ms**, noting that delays much over 300 ms begin to degrade the experience.[^algolia-debounce]
-The savings are large precisely because keystroke-rate calling is so wasteful: teams report
+The savings are large because keystroke-rate calling is wasteful: teams report
 autocomplete server load dropping by about **85%** after adding debouncing — hundreds of requests
 becoming dozens — with no loss of perceived responsiveness.[^freecodecamp-debounce]
 
@@ -171,7 +172,7 @@ Gating's natural partner is *not regenerating what you already have*. Cache and 
 result when the input is unchanged, and serve precomputed or shared content where possible.
 RevenueCat notes that reusing results for **even ~20% of requests** can drop AI costs
 significantly.[^revenuecat-margins] Lazy, on-demand generation (compute only when first
-requested, then reuse) and surfacing precomputed content are the cheapest wins of all — see
+requested, then reuse) and surfacing precomputed content are the cheapest wins — see
 *Precomputed Content Surfacing*.
 
 ## Example Where It Works

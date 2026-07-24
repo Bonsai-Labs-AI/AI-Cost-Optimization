@@ -99,7 +99,8 @@ The **AI / non-AI hybrid** pattern draws a deliberate line: deterministic paths 
 what they do best, and the LLM is reserved for the residual — open-ended reasoning and
 language generation that genuinely need a model.[^hybrid-arch] The cost lever here is not
 a cheaper token or a smaller model; it is **not calling the LLM at all** for a large share
-of interactions. Because a deterministic hit costs effectively nothing and returns
+of interactions. On client engagements we routinely find whole intents being sent to a
+model that a lookup or a form would have handled. Because a deterministic hit costs effectively nothing and returns
 instantly, this is one of the few optimizations that improves cost, latency, **and**
 reliability at the same time — deterministic code is auditable and always returns the same
 answer for the same input, where an LLM occasionally does not.[^hybrid-arch]
@@ -156,7 +157,7 @@ form** instead of an open text box the model then has to parse:
 
 For predictable, repeated questions, deflect to a **search index or a cached/canned
 response** rather than regenerating the same answer live. This is where the economics are
-starkest: in customer support, best-in-class AI containment runs **70–80%**, and each
+clearest: in customer support, best-in-class AI containment runs **70–80%**, and each
 contained contact shifts **\$8–15** of human-agent cost down to **\$0.10–\$1.00** of
 automation — but a *deterministic* deflection (FAQ lookup, search) also avoids the LLM
 generation cost that a model-answered deflection still incurs.[^decagon-containment]
@@ -173,8 +174,8 @@ line (see *Post-Processing Instead of Generation* and *Precomputed Content Surfa
 **Guardrail:** don't over-rotate into rigid flows. If the deterministic path can't handle
 a request, it must fall through cleanly to the LLM (or a human), and the natural-language
 escape hatch should always be one tap away.[^google-convo-design] A hybrid UX that forces
-users through decision trees they didn't want degrades the very experience the AI was
-meant to improve.
+users through decision trees they didn't want degrades the experience you were trying to
+improve.
 
 ## Example Where It Works
 
@@ -192,7 +193,7 @@ multi-turn LLM exchange to a sub-cent, sub-4-ms lookup — the classifier itself
 rounding error against the model call it replaces.[^gqr-paper] Blended cost per session
 falls by well over half, latency on the common path collapses, and containment holds or
 improves because the deterministic answers are exact and consistent every
-time.[^decagon-containment][^hybrid-arch] Crucially, the free-text bar stays live, so the
+time.[^decagon-containment][^hybrid-arch] The free-text bar stays live, so the
 40% who need the model still get it.[^google-convo-design]
 
 ## Example Where It Would NOT Work

@@ -23,7 +23,7 @@ status: published
 lastUpdated: "2026-07-03"
 related:
   - "product-ux/ai-feature-gating"
-  - "prompt-context/user-controlled-quality-mode"
+  - "product-ux/user-controlled-quality-mode"
   - "agent-workflow/agent-budget-guardrails"
 sources:
   - id: litellm-budgets
@@ -90,6 +90,15 @@ sources:
     accessed: "2026-07-03"
     kind: blog
     note: "In early 2026 OpenAI, Anthropic, and Google restricted flagship reasoning/pro models to paid tiers and tightened free-tier message caps — model-access gating by plan as the dominant consumer pattern."
+  - id: ding-subscriptions
+    title: "AI subscriptions get short-squeezed"
+    publisher: "Ethan Ding"
+    authors: "Ethan Ding"
+    year: 2026
+    url: "https://ethanding.substack.com/p/ai-subscriptions-get-short-squeezed"
+    accessed: "2026-07-21"
+    kind: blog
+    note: "The length of task an AI can complete has been doubling roughly every six months, so per-user consumption on an uncapped tier grows structurally over time ('what used to return 1,000 tokens is now returning 100,000'). Anthropic rolled back its $200/mo unlimited Claude Code tier after heavy users burned ~10 billion tokens/month."
 ---
 
 ## Overview
@@ -99,8 +108,12 @@ feature does not: every free-tier session, every trial user, and every automated
 consumes tokens that cost real money. If a product tier is defined only by *which
 features* it unlocks — and not by *how much AI it may consume* — then AI spend is
 effectively uncapped from the demand side. The dangerous case is the free tier: a
-free tier without hard limits is a **cost bomb**, because it invites exactly the users
-who generate cost without ever generating revenue.[^revenuecat-margins]
+free tier without hard limits runs up cost without bound, because it invites exactly the
+users who generate cost without ever generating revenue.[^revenuecat-margins] And the cost a
+cap bounds is not static — the length of task these models can complete has been doubling
+roughly every six months, so an uncapped tier's worst case only grows over time: work that
+returned ~1,000 tokens a year ago can return ~100,000 now.[^ding-subscriptions] An
+uncapped free tier is something we flag early on almost every engagement.
 
 **Cost-aware product tiers** attach *spend-bounding* controls to each plan:
 
@@ -154,7 +167,7 @@ Free access is where uncontrolled cost concentrates, for two structural reasons:
    free trial entirely because "trial users were able to generate large volumes of
    output, consume API cost, then churn before ever paying" — i.e. the free path was
    *funding churn*, not activation.[^revenuecat-margins]
-2. **A free/leaked credential is an attacker's dream.** This is not hypothetical:
+2. **A free or leaked credential is a target.** This is not hypothetical:
    researchers found **OpenAI keys exposed across 5,000+ GitHub repos and 3,000+
    production sites**, which attackers use to "execute high-volume inference
    workloads under the victim's billing umbrella."[^vicarius-keys] In one Feb-2026
@@ -244,3 +257,4 @@ price of any plan.
 [^vicarius-keys]: Vicarius, "8,000+ ChatGPT API keys exposed across GitHub & production sites," 2026 — <https://www.vicarius.io/articles/8-000-chatgpt-api-keys-exposed-across-github-production-sites>
 [^openrouter-free]: OpenRouter Blog, "Free LLM APIs in 2026: 13 Options Ranked and Compared," 2026 — <https://openrouter.ai/blog/tutorials/free-llm-apis-compared/>
 [^pecollective-freetiers]: PE Collective, "11 AI Free Tiers Compared: Limits and Catches (2026)," 2026 — <https://pecollective.com/blog/ai-free-tiers-compared/>
+[^ding-subscriptions]: Ethan Ding, "AI subscriptions get short-squeezed," 2026 — <https://ethanding.substack.com/p/ai-subscriptions-get-short-squeezed>

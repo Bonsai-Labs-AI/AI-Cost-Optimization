@@ -115,7 +115,7 @@ match or beat a general large one on your specific corpus — because general-be
 does not reliably predict in-domain retrieval quality.[^finmteb]
 
 This is the sibling of **[Embedding Quantization & MRL Truncation](/techniques/rag/embedding-quantization-mrl/)**,
-and the two must not be conflated: that page is the **infra** side — int8/binary
+and the two are different things: that page is the **infra** side — int8/binary
 *quantization* of whatever vectors you already have. **This** page is the upstream decision:
 *which embedder, at what native quality, and how many MRL dimensions*. In practice you stack
 them — choose a domain-tuned Matryoshka model here, then quantize its truncated vectors there.
@@ -132,7 +132,7 @@ forced to pack the most important information into the **earliest** dimensions.[
 The result is a single vector you can truncate to any of those sizes by simply slicing the
 first N numbers — no re-embedding, no separate model.
 
-The quality retention is the reason this works as a cost lever. On STSBenchmark, a
+The quality retention is what makes this a cost lever. On STSBenchmark, a
 Matryoshka model truncated to **8.3% of its full size retains 98.37%** of full-size
 performance, versus 96.46% for a standard model cut the same amount — and the MRL model
 beats the standard model at *every* dimensionality.[^hf-matryoshka] The original paper
@@ -145,9 +145,9 @@ config change rather than a research project:
 
 - **OpenAI** `text-embedding-3-small` (1536 dims) and `-3-large` (3072 dims) accept a
   `dimensions` parameter that shortens embeddings "without the embedding losing its
-  concept-representing properties." Strikingly, `-3-large` truncated to **256 dims still
+  concept-representing properties." `-3-large` truncated to **256 dims still
   outperforms** the older `ada-002` at its full **1536 dims** on MTEB — a 12× narrower
-  vector that is still better.[^openai-embeddings]
+  vector that still scores better.[^openai-embeddings]
 - **Cohere** `embed-v4.0` exposes an `output_dimension` of 256 / 512 / 1024 / 1536 (its
   Matryoshka sizes) and native `int8` / `binary` compression in the same call.[^cohere-embed]
 - **Open-weight** Matryoshka models (e.g. `nomic-embed-text-v1.5`) truncate via a
@@ -157,7 +157,7 @@ config change rather than a research project:
 > dimensions the model was trained on; slicing to an arbitrary in-between size behaves like
 > random truncation. Always benchmark the specific dimension you plan to ship.[^hf-matryoshka]
 
-A clean pattern that keeps quality while banking most of the savings is **shortlist-and-rerank**:
+A pattern that keeps quality while capturing most of the savings is **shortlist-and-rerank**:
 run the first-pass ANN search over cheap **truncated** vectors, then re-rank the small
 shortlist using the **full-size** vectors.[^sbert-matryoshka] You pay full-width cost only on
 a handful of candidates.
@@ -174,7 +174,7 @@ Contrastive fine-tuning is well-trodden and cheap relative to training an LLM. Y
 `(anchor, positive)` pairs or `(anchor, positive, negative)` triplets from your own data
 (query→relevant-chunk logs are ideal) and fine-tune with an in-batch-negatives loss such as
 `MultipleNegativesRankingLoss`; each task needs its own notion of similarity, which is
-exactly why domain tuning moves the needle.[^sbert-train] Crucially, you can **layer
+why domain tuning helps.[^sbert-train] You can also **layer
 `MatryoshkaLoss` on top** of the contrastive loss, producing a *domain-tuned, truncatable*
 embedder in one training run — both levers at once.[^sbert-train][^sbert-matryoshka]
 

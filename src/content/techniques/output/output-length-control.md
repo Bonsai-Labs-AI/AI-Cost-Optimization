@@ -132,7 +132,8 @@ By default, most chat-tuned models are verbose. Ask a yes/no question and you ge
 paragraph; ask for a value and you get the value wrapped in a preamble ("Certainly! Here is
 the information you requested…"), a restatement of the question, and a closing summary. None
 of that padding is free: every word of it is an **output token**, and on frontier rate cards
-output tokens are the single most expensive thing you buy.
+output tokens are the most expensive token class you buy. In our client work, unbounded
+output on high-volume short-answer features is one of the first places we find waste.
 
 **Output Length Control** combines two complementary mechanisms that should always travel
 together:
@@ -336,7 +337,7 @@ task on a non-reasoning model.
   a correctly sized cap (≥4× expected visible output, never below the provider's reasoning
   reservation) combined with *Reasoning-Token Budgeting* to actually reduce the thinking.
 
-- **Miscalibrated caps on reasoning models — the silent money-loser.** A well-meaning engineer
+- **Miscalibrated caps on reasoning models.** A well-meaning engineer
   copies a tight classifier cap onto a reasoning-model endpoint and ends up paying more, not less:
   the model burns its budget on internal reasoning, returns nothing visible, and a user retry
   triggers another full-priced call. A hard ceiling is a guard rail, not a cost lever; treating

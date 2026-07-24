@@ -22,7 +22,6 @@ status: published
 lastUpdated: "2026-07-03"
 related:
   - "prompt-context/few-shot-example-selection"
-  - "prompt-context/few-shot-example-selection"
   - "prompt-context/learned-prompt-compression"
   - "fine-tuning/fine-tuning-cheaper-models"
 sources:
@@ -97,7 +96,7 @@ and few-shot demonstrations for the prompt that maximizes that metric.[^dspy-pap
 
 The cost angle is what makes this a cost-optimization technique rather than only a quality
 one. Because the objective is a metric you control, you can make the optimizer prefer
-**shorter** prompts (fewer input tokens on every call, forever) and — critically — you can
+**shorter** prompts (fewer input tokens on every call, forever) and — the key point — you can
 run the search *against a cheaper model* and keep whichever model still passes. DSPy's
 original paper showed programs compiled to small open models (a 770M-parameter T5,
 Llama2-13B) becoming **competitive with expert-written prompt chains for GPT-3.5**;[^dspy-paper]
@@ -117,7 +116,7 @@ suite plus manual few-shot pruning is the cheaper win.
 
 ## Detailed Approach & Techniques
 
-### The metric is the whole game
+### The metric drives everything
 
 Everything downstream depends on a **metric function**. In DSPy a metric is arbitrary
 Python with the signature `metric(example, prediction, trace=None)` returning a float — it

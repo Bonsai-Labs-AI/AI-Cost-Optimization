@@ -7,9 +7,9 @@ shortDescription: "Statically map each task or feature to the smallest model tha
 effort: Low
 gain: Very High
 riskToQuality: Medium
-effortWhy: Low because once a quality bar exists, right-sizing is an eval sweep plus a static config change — a pure API swap with no infrastructure.
-gainWhy: Very High because the cheapest tier costs 20-100×+ less than the flagship, and it serves the high-volume work where that spread compounds.
-riskWhy: Medium because down-sizing ships silent regressions unless it is eval-gated, and an eval set rarely captures the dangerous failure tail.
+effortWhy: "Once a quality bar exists, right-sizing is an eval sweep plus a static config change — an API swap with no infrastructure."
+gainWhy: "The cheapest tier costs 20-100×+ less than the flagship, and it serves the high-volume work where that spread compounds."
+riskWhy: "Down-sizing ships silent regressions unless it is eval-gated, and an eval set rarely captures the failure tail that matters."
 detectionSignals:
   - "Flagship-by-default — a single premium model serves every call, so classification and routing run on the same tier as hard reasoning."
   - "No task-to-model map — the model id is hard-coded once and never revisited per task or feature."
@@ -74,6 +74,24 @@ sources:
     accessed: "2026-06-29"
     kind: benchmark
     note: "Independent index combining 9 evaluations against per-MTok price; used to spot the cheapest tier on the quality frontier for a task class. Rankings churn as models ship."
+  - id: epoch-price-trends
+    title: "LLM inference prices have fallen rapidly but unequally across tasks"
+    publisher: "Epoch AI"
+    authors: "Cottier, Snodin, Owen, Adamczewski"
+    year: 2025
+    url: "https://epoch.ai/data-insights/llm-inference-price-trends"
+    accessed: "2026-07-21"
+    kind: benchmark
+    note: "The cheapest price to reach a fixed benchmark score fell between 9× and 900× per year across tasks (median ~50×/yr; ~200×/yr excluding pre-2024 data). Declines are uneven across task types."
+  - id: a16z-llmflation
+    title: "Welcome to LLMflation — LLM inference cost is going down fast"
+    publisher: "Andreessen Horowitz (a16z)"
+    authors: "Guido Appenzeller"
+    year: 2024
+    url: "https://a16z.com/llmflation-llm-inference-cost/"
+    accessed: "2026-07-21"
+    kind: blog
+    note: "For an LLM of equivalent performance, cost falls ~10× per year (~1000× over 3 years): GPT-3-level quality (MMLU ~42) went from ~$60/M tokens (Nov 2021) to ~$0.06/M; GPT-4-level (MMLU 83) fell ~62× since Mar 2023."
 ---
 
 ## Overview
@@ -82,16 +100,17 @@ Most AI products start by wiring every call to one capable, expensive model — 
 was best when the prototype shipped. That model then becomes the silent default for
 *everything*: not just the genuinely hard reasoning, but also intent classification,
 field extraction, short summaries, routing decisions, and tagging — tasks a much cheaper
-tier handles at the same quality.
+tier handles at the same quality. In our client work, this is usually the first lever we
+check.
 
-**Model right-sizing** is the discipline of statically mapping each task or feature to
+**Model right-sizing** means statically mapping each task or feature to
 the **smallest model that still clears that task's quality bar**, rather than paying
 flagship prices across the board. It absorbs two adjacent practices: *static task-based
 model selection* (pick the right tier per feature, fixed at config time) and *using
 open-weight models via a managed API* (a cheap tier that happens to be an open model
 someone else hosts).
 
-The reason this is the single biggest cost lever in the pyramid is the **price spread**.
+The gain comes from the **price spread**.
 On every major provider the cheapest tier costs **20-100×+ less** than the flagship for
 the same token. As of mid-2026, OpenAI's flagship sits at roughly **$5 / $30** per
 million input/output tokens while its nano tier is about **$0.20 / $1.25** — a ~25×
@@ -163,7 +182,12 @@ Right-sizing produces a **static task→model map** held in config — this is w
 distinguishes it from *dynamic model routing* (per-request decisions) and *LLM cascades*
 (escalate on a confidence/verification signal). Because the landscape churns, schedule a
 periodic re-run of the eval sweep: a model that didn't pass last quarter — or a newly
-launched cheaper tier — may pass now, and the savings compound.
+launched cheaper tier — may pass now, and the savings compound. The churn is fast enough to
+make this worth scheduling: for a fixed capability, inference prices fall roughly **10× per
+year** (a16z's "LLMflation" — GPT-3-level quality went from ~$60/M tokens in 2021 to ~$0.06/M),
+and the cheapest price to reach a given benchmark score has dropped a median **~50× per year**
+across tasks.[^a16z-llmflation][^epoch-price-trends] A tier that failed your eval two quarters
+ago may clear it now at a fraction of the price.
 
 ### What right-sizing is *not*
 
@@ -189,7 +213,7 @@ now processes ~2,000,000 emails/month.
 
 Moving the two high-volume steps onto a tier ~20-25× cheaper cuts the feature's model
 spend by **well over 90%** with **no measurable quality change** — the eval set is the
-proof, and it took a day of work plus a config change. This is the canonical
+proof, and it took a day of work plus a config change. That is the standard
 right-sizing win: high volume, low difficulty, and a real quality bar to swap against.
 
 ## Example Where It Would NOT Work
@@ -219,3 +243,5 @@ right-sizing win: high volume, low difficulty, and a real quality bar to swap ag
 [^deepseek-pricing]: DeepSeek API Docs, "Models & Pricing" — <https://api-docs.deepseek.com/quick_start/pricing>
 [^together-pricing]: Together AI, "Pricing — serverless open-model inference" — <https://www.together.ai/pricing>
 [^artificialanalysis]: Artificial Analysis, "LLM Leaderboard — Intelligence Index, Price & Speed" — <https://artificialanalysis.ai/models>
+[^epoch-price-trends]: Cottier, Snodin, Owen, Adamczewski (Epoch AI), "LLM inference prices have fallen rapidly but unequally across tasks," 2025 — <https://epoch.ai/data-insights/llm-inference-price-trends>
+[^a16z-llmflation]: Guido Appenzeller (a16z), "Welcome to LLMflation — LLM inference cost is going down fast," 2024 — <https://a16z.com/llmflation-llm-inference-cost/>

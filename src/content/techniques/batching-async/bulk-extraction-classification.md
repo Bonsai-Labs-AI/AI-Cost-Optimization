@@ -26,7 +26,6 @@ related:
   - "model-routing/model-right-sizing"
   - "output/structured-outputs"
   - "fine-tuning/task-specific-lightweight-models"
-  - "fine-tuning/task-specific-lightweight-models"
   - "caching-reuse/prompt-caching-prefix-caching"
 sources:
   - id: anthropic-batch
@@ -99,8 +98,9 @@ output is **small and structured** (a label, a few fields, a JSON object).
 
 The naive implementation — one synchronous, full-price call to a flagship model per item,
 parsing free-text JSON with retries — is often **5–20× more expensive than it needs to
-be**, and no more accurate. A bulk pipeline attacks the cost from four directions at once
-and *multiplies* the savings:
+be**, and no more accurate. We see this one-call-per-row pattern on almost every data
+pipeline we pick up. A bulk pipeline attacks the cost from four directions at once and
+*multiplies* the savings:
 
 1. **The Batch API** cuts the per-token price in half.[^anthropic-batch][^openai-batch]
 2. **Multi-item prompt batching** processes N items per call, amortizing the shared
@@ -121,7 +121,7 @@ schema, few-shot examples. If you send **one item per call**, you pay for that w
 preamble once *per item*. If you send **N items per call**, you pay for it **once per N
 items** — the per-item overhead is divided by N.
 
-The empirical result is strong. A 2026 study processing 100,000 texts across four coding
+The measured effect is large. A 2026 study processing 100,000 texts across four coding
 variables found that the one-item-at-a-time approach requires **400,000 API calls**;
 **batching 25 items** and **stacking all four variables** into a single prompt reduces that
 to **4,000 calls — an over-80% token-cost reduction**.[^pipal-batching] The paper's title is

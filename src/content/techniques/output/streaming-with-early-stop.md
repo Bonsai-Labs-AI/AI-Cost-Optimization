@@ -21,7 +21,6 @@ status: published
 lastUpdated: "2026-07-02"
 related:
   - "output/output-length-control"
-  - "output/output-length-control"
   - "model-routing/reasoning-token-budgeting"
   - "output/structured-outputs"
 sources:
@@ -141,8 +140,8 @@ equivalent ways: **break out of the async iterator**, or call
 `stream.controller.abort()` (which can fire from outside the loop, e.g. a timeout);
 afterward `stream.aborted` is `true`.[^anthropic-stream]
 
-**Critically: does cancelling actually stop the bill?** The answer is *provider- and
-implementation-dependent*, and this is the trap.
+**Does cancelling actually stop the bill?** The answer is *provider- and
+implementation-dependent*, and this is where teams get caught.
 
 - On **OpenAI**, terminating the connection ends generation, so you are billed only for
   tokens generated **up to the cancel** (plus a handful already in transit) — but

@@ -74,11 +74,11 @@ A **specialized sub-agent** architecture breaks a task into pieces handled by
 purpose-built agents — a lead/orchestrator agent that plans and delegates, plus worker
 sub-agents that each have their **own context window, their own tool set, their own
 system prompt, and (often) a right-sized model** — then synthesizes their results.[^langchain-subagents]
-It is the most autonomous, most flexible end of agent design, and it is genuinely
-powerful for open-ended work that a single agent cannot hold in one context.
+It is the most autonomous, most flexible end of agent design, and it works well for
+open-ended work that a single agent cannot hold in one context.
 
-But as a **cost** technique it is dangerous, and honesty about that is the entire point
-of putting it at **Level 3**. Anthropic's own production numbers are the headline: in
+But as a **cost** technique it is easy to get wrong, which is why it sits at
+**Level 3**. Anthropic's own production numbers are the headline: in
 their multi-agent research system, "agents typically use about 4× more tokens than chat
 interactions, and multi-agent systems use about 15× more tokens as chats."[^anthropic-multiagent]
 That 15× multiplier means a multi-agent design **starts ~15× more expensive per task**
@@ -97,11 +97,12 @@ simply dominates and the system costs *more* than a single agent for the same or
 quality.[^single-vs-multi] So this page is a conditional recommendation, not a blanket
 one: reach for specialized sub-agents when the task genuinely parallelizes and you can
 right-size the workers; otherwise a single agent or a deterministic **workflow** is
-cheaper.
+cheaper. In our client work, this is the pattern teams most often reach for before they
+need it.
 
 ## Detailed Approach & Techniques
 
-### The honest cost math
+### The cost math
 
 Model a task as a single agent costing `C` tokens. A naive multi-agent version of the
 *same* task tends toward **~15× `C`** in Anthropic's data because the orchestrator

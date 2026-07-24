@@ -91,8 +91,9 @@ The default behavior of most LLM applications is to let the prompt grow until so
 breaks: history accumulates turn after turn, retrieval returns "top-k to be safe," tool
 schemas pile up, and the request stops only when it bumps the model's maximum context
 size. Because every request re-processes its **entire** input, this "just stuff the
-window" habit is the single largest driver of input cost — and input cost scales linearly
-with the token count on every call.
+window" habit is the biggest driver of input cost — and input cost scales linearly
+with the token count on every call. Unbounded history is one of the first things we look
+for when auditing a client's spend.
 
 **Context Window Budgeting** replaces that drift with an explicit policy: decide how many
 tokens a call is *allowed* to use, allocate that budget across components (system prompt,
@@ -114,7 +115,7 @@ context decreases") and a finite **attention budget**, concluding that good cont
 engineering means finding "the smallest possible set of high-signal tokens."[^anthropic-context-eng]
 So an unbudgeted window costs more *and* can answer worse. It sits at **Level 1** because
 the core practice — set a budget, enforce per-component caps, apply a trimming policy — is
-foundational hygiene that any team can adopt with off-the-shelf primitives.
+basic hygiene that any team can adopt with off-the-shelf primitives.
 
 ## Detailed Approach & Techniques
 

@@ -22,7 +22,6 @@ lastUpdated: "2026-07-03"
 related:
   - "model-routing/model-right-sizing"
   - "fine-tuning/task-specific-lightweight-models"
-  - "fine-tuning/task-specific-lightweight-models"
   - "model-routing/local-open-weight-substitution"
   - "model-routing/router-training-from-traffic"
 sources:
@@ -93,6 +92,15 @@ sources:
     accessed: "2026-07-03"
     kind: paper
     note: "Under a fixed budget, distilling a large teacher's labels into a compact student is often more cost-efficient than annotating more data — evidence for the distillation-vs-label economics."
+  - id: tunguz-inference
+    title: "So You Want to Sell Inference"
+    publisher: "Tomasz Tunguz"
+    authors: "Tomasz Tunguz"
+    year: 2026
+    url: "https://tomtunguz.com/so-you-want-to-sell-inference/"
+    accessed: "2026-07-21"
+    kind: blog
+    note: "Argues 'routing & caching are tactical & copyable' while 'distillation is defensible for a while' — you end with a proprietary model competitors can't replicate at a fraction of the cost. Reselling inference at cost is zero-margin; value-based pricing decouples margin from the inference line."
 ---
 
 ## Overview
@@ -110,12 +118,13 @@ synthetic-data generation, and LoRA/QLoRA are not competing techniques — they 
 **methods inside** this one: distillation is *how you get the labels*, synthetic data is *how
 you get enough of them*, and LoRA/QLoRA are *how you train and serve the small model cheaply*.
 
-The economics are the whole story. A frontier call might cost 10–40× what a fine-tuned small
+The economics decide it. A frontier call might cost 10–40× what a fine-tuned small
 model costs per token; independent benchmarks show fine-tuned small models reaching **15–31×
 lower cost** than their teacher while **matching or exceeding** its task quality.[^tensorzero]
 The catch is that this only pays once cumulative inference savings exceed the fixed training +
 data + maintenance cost — so it sits at **Level 3**: real engineering investment with strong
-ROI **at volume**, not an off-the-shelf config.
+ROI **at volume**, not an off-the-shelf config. When we scope this for a client, the first
+question is always whether the volume is there to amortize the training cost.
 
 > **Vendor-availability caveat (2026).** OpenAI is **winding down its self-serve fine-tuning
 > API and platform**: new jobs are restricted from May 7, 2026, tighter from July 2, 2026, and
@@ -193,6 +202,19 @@ behind **learning a router from your own traffic** (cross-link *Router Training 
 L3): the same logged (input → frontier-output) pairs that train the cheap model also train the
 classifier that decides when to use it.
 
+### Why this is a moat, not just a saving
+
+Fine-tuning also differs from the tactical levers around it. As investor
+Tomasz Tunguz puts it, **"routing & caching are tactical & copyable" — but "distillation is
+defensible for a while."**[^tunguz-inference] Running your production traffic through a frontier
+teacher and distilling it into a small model on *your* data leaves you with "a proprietary model
+competitors can't replicate, at a fraction of the cost."[^tunguz-inference] And as inference
+commoditizes and the markup on reselling raw model calls "compresses toward zero," the fine-tuned
+model **decouples your margin from the per-token inference line** — a recurring cost becomes an
+asset you own. For a product whose unit economics have to survive that commoditization, that is
+why this technique earns its L3 investment even though routing (L3) and caching (L1) are cheaper
+to stand up.
+
 ## Example Where It Works
 
 A document-processing SaaS runs **named-entity extraction and field classification** over
@@ -213,8 +235,8 @@ task + existing labeled traffic**.
 
 - **Broad or fast-changing tasks.** A general assistant, or a task whose schema/policy changes
   monthly, breaks the economics: the model needs re-distilling constantly, `F` never amortizes,
-  and a fine-tune frozen on last month's behavior silently regresses. Keep these on a frontier
-  model (or a router).
+  and a fine-tune frozen on last month's behavior drifts out of date without any obvious signal.
+  Keep these on a frontier model (or a router).
 
 - **Too little data / too little volume.** Fine-tuning needs enough representative examples to
   learn the task, and enough downstream volume to pay back training. A low-traffic feature (a few
@@ -239,3 +261,4 @@ task + existing labeled traffic**.
 [^bedrock-ft]: Amazon Bedrock User Guide, "Customize a model with fine-tuning in Amazon Bedrock" — <https://docs.aws.amazon.com/bedrock/latest/userguide/custom-model-fine-tuning.html>
 [^qlora-repo]: artidoro/qlora, "Efficient Finetuning of Quantized LLMs," GitHub — <https://github.com/artidoro/qlora>
 [^distill-annotate]: Kang et al., "Distill or Annotate? Cost-Efficient Fine-Tuning of Compact Models," arXiv/ACL 2023 — <https://arxiv.org/abs/2305.01645>
+[^tunguz-inference]: Tomasz Tunguz, "So You Want to Sell Inference," 2026 — <https://tomtunguz.com/so-you-want-to-sell-inference/>

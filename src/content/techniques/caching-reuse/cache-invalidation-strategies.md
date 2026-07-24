@@ -28,7 +28,6 @@ related:
   - "caching-reuse/semantic-caching"
   - "caching-reuse/rag-pipeline-caching"
   - "caching-reuse/tool-result-caching"
-  - "caching-reuse/rag-pipeline-caching"
   - "caching-reuse/summary-caching"
 sources:
   - id: redis-eviction
@@ -169,7 +168,7 @@ together.[^redis-invalidation]
 
 ### Versioned & namespaced keys (the LLM-specific workhorse)
 
-The single most powerful pattern for LLM caches is to fold the identity of *everything that
+The most powerful pattern for LLM caches is to fold the identity of *everything that
 determines the answer* into the cache key. Instead of keying on the query alone, key on a
 **namespace built from the volatile dependencies**:
 

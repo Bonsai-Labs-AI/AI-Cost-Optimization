@@ -24,7 +24,6 @@ related:
   - "fine-tuning/local-model-deployment"
   - "fine-tuning/calibrated-quantization"
   - "fine-tuning/task-specific-lightweight-models"
-  - "fine-tuning/task-specific-lightweight-models"
 sources:
   - id: slora
     title: "S-LoRA: Serving Thousands of Concurrent LoRA Adapters"
@@ -86,13 +85,12 @@ report reducing trainable parameters versus full fine-tuning of GPT-3 175B by
 multi-billion-parameter base is **tens to a few hundred MB**, against a base that is
 **tens of GB** in GPU memory.
 
-That size asymmetry creates a cost problem *and* its solution. The naive way to ship
+That size asymmetry is both the cost problem and the way out. The naive way to ship
 "a fine-tuned model per task" or "a fine-tuned model per tenant" is to deploy each one
 separately — merge the adapter into the base and stand up a dedicated endpoint on its
 own GPU. With **N** narrow models that is **N** copies of a ~tens-of-GB base, N GPUs,
 and N mostly-idle boxes. Serving cost then scales with the **number of models**, not
-with traffic — the exact anti-pattern that kills the "many specialized models"
-strategy.
+with traffic — the pattern that breaks the "many specialized models" strategy.
 
 **Multi-LoRA serving** collapses that. It keeps **one** copy of the shared base model
 resident and treats the adapters as small, swappable deltas: incoming requests each
@@ -102,8 +100,8 @@ Because the base weights (the expensive part) are shared and the per-request del
 cheap, one GPU can serve **hundreds to thousands** of distinct fine-tuned models at
 throughput close to serving the base alone.[^slora][^lorax-repo] The per-model serving
 cost effectively collapses from "one GPU each" to "one shared GPU for all of them" —
-which is why this is the piece that makes owning dozens of narrow fine-tunes
-economically sane. It sits at **L3** because it is a real self-hosted serving
+which is what makes owning dozens of narrow fine-tunes affordable. It sits at **L3**
+because it is a real self-hosted serving
 build (custom kernels, adapter memory tiering, an inference stack you own and operate),
 and it only pays off once N is genuinely large.
 
@@ -130,7 +128,7 @@ a single batch contains requests hitting **different** adapters.
   4× throughput** over HuggingFace PEFT and over vLLM's naive LoRA support, and
   **increasing the number of served adapters by several orders of magnitude**.[^slora]
 
-The economic consequence is the point: N adapters share the base's GPU memory and the
+The cost consequence is the point: N adapters share the base's GPU memory and the
 base's compute, so **per-model serving cost collapses**. You pay for roughly one base
 model's footprint and amortize it across all N tenants/tasks, instead of paying for N
 deployments.[^lorax-repo][^slora]
@@ -197,7 +195,7 @@ low-average; no single customer justifies a dedicated GPU.
   harvest — a single dedicated deployment already saturates its GPU, and the multi-LoRA
   machinery (kernels, adapter tiering, routing) is pure added complexity. Below a
   meaningful N, just deploy the model(s) directly (see *Local Model Deployment*).
-- **Adapters over different base models.** The whole economy rests on a **single shared
+- **Adapters over different base models.** The whole approach rests on a **single shared
   base**. If your "many models" are actually different base models — different families,
   sizes, or architectures — they cannot share one base copy, and you are back to N
   deployments. Multi-LoRA only compresses a fleet that is *one base + many adapters*.

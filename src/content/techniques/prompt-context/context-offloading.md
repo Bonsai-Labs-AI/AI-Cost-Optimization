@@ -23,9 +23,7 @@ status: published
 lastUpdated: "2026-07-03"
 related:
   - "prompt-context/context-reduction"
-  - "prompt-context/context-reduction"
   - "caching-reuse/cache-aware-agent-design"
-  - "agent-workflow/agent-memory-management"
   - "agent-workflow/agent-memory-management"
 sources:
   - id: anthropic-memory
@@ -192,7 +190,7 @@ it needed anyway; offload the wrong thing and a later step misses context it can
   needed slice, it acts on missing state. Provenance, clear file naming, and previews reduce
   this, but it's the core quality risk.
 - **Storage discipline.** Files grow, go stale, and clutter. Anthropic's guidance calls for
-  size caps, expiration of unused files, and — critically — **path-traversal protection**,
+  size caps, expiration of unused files, and — most important — **path-traversal protection**,
   since the model requests paths your app executes.[^anthropic-memory]
 - **Scale threshold.** For short, single-shot, or shallow tasks the machinery is pure
   overhead — a plain prompt (with prompt caching for any stable prefix) is cheaper and
@@ -226,8 +224,8 @@ without re-deriving earlier state.[^anthropic-harnesses]
   read-back steps only adds latency, extra calls, and complexity for zero token savings. For
   a stable prefix here, plain *prompt caching* is the right lever, not offloading.
 - **State that's needed every step anyway.** If the task genuinely requires *all* the
-  accumulated context on *every* turn (e.g. holistic reasoning over a whole document that
-  must stay fully in view), offloading just forces the agent to re-read everything each step —
+  accumulated context on *every* turn (e.g. reasoning over a whole document that must stay
+  fully in view), offloading just forces the agent to re-read everything each step —
   you pay the retrieval tax and get the tokens back in context regardless. *Learned
   compression* or *summarization* fits better when the state must stay present but can be
   shrunk.[^langchain-deepagents-blog]

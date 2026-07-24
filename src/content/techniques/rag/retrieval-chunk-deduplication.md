@@ -119,6 +119,8 @@ Duplication in retrieved context comes from three recurring sources:
 - **Repeated boilerplate across pages.** Headers, footers, disclaimers, and navigation
   text recur on every page of a corpus and get swept into many chunks.
 
+We've seen retrieved context on client systems where half the tokens were the same clause repeated.
+
 Retrieval-time chunk deduplication removes these near-duplicates **after retrieval,
 before the LLM call** — keeping the highest-ranked representative of each cluster and
 dropping the rest. It sits at **Level 2**: it's a targeted retrieval-quality-and-cost
@@ -185,7 +187,7 @@ layering on for verbatim repeats.
 
 ### Choosing and layering
 
-A robust pipeline layers cheap-to-expensive: exact hash first (free, lossless), then
+A good pipeline layers cheap-to-expensive: exact hash first (free, lossless), then
 either MinHash near-dup or an embedding-threshold pass for the fuzzy cases, optionally with
 MMR at retrieval to reduce redundancy up front. Whatever the method, **start with a
 conservative (high) threshold and only loosen it if redundancy persists**, because lower

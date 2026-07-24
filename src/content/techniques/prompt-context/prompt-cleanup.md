@@ -3,7 +3,7 @@ title: "Prompt Cleanup"
 category: prompt-context
 maturityLevel: 1
 maturityProvisional: false
-shortDescription: "Strip accreted boilerplate, dead instructions, redundant restatements, stale few-shot examples, and unused tool descriptions from your prompts — including the system prompt — so you stop paying full input price for tokens that add no signal."
+shortDescription: "Go through your prompts — including the system prompt — and delete the boilerplate, dead instructions, repeated rules, stale few-shot examples, and unused tool descriptions, so you stop paying full input price for tokens that add nothing."
 effort: Low
 gain: Medium
 riskToQuality: Low
@@ -11,7 +11,7 @@ effortWhy: "L1 hygiene with no infrastructure — just read the prompts you alre
 gainWhy: Medium because cleanup removes obvious waste cheaply but is not a structural win like model right-sizing or batching.
 riskWhy: Low because each pass is gated on an unchanged held-out eval score, so removed tokens are proven to be waste.
 detectionSignals:
-  - "Accreted system prompt — instructions were added to patch incidents and never removed or consolidated."
+  - "System prompt that only grows — instructions were added to patch incidents and never removed or consolidated."
   - "Restated rules — the same constraint appears two or three times in different wording across the prompt."
   - "Stale few-shot examples — added early and never revisited; some are now redundant or contradict newer instructions."
   - "Tool-schema overload — every tool/function schema is injected on every call regardless of whether the request could use it."
@@ -83,11 +83,12 @@ sources:
 
 Prompt cleanup is the most basic prompt-cost hygiene there is: go through the prompts your
 app actually sends and **remove the tokens that carry no signal**. In production these
-accumulate silently — a system prompt grows by accretion as engineers paste in a new rule
-to patch each incident and never delete the old one; the same constraint gets restated two
-or three times in slightly different words; few-shot examples added on day one are never
-revisited and now overlap or contradict newer instructions; and every tool schema is
-injected on every call whether or not the request could use it.[^redis-bloat]
+build up over time — a system prompt grows as engineers paste in a new rule to patch each
+incident and never delete the old one; the same constraint gets restated two or three
+times in slightly different words; few-shot examples added on day one are never revisited
+and now overlap or contradict newer instructions; and every tool schema is injected on
+every call whether or not the request could use it.[^redis-bloat] In our client work, an
+overgrown system prompt is usually the first thing we find.
 
 The cost problem is mechanical. The system prompt and tool definitions are **consumed in
 full on every inference call** and are often the single highest fixed-cost component of an
@@ -100,7 +101,7 @@ and instruction scaffolding anywhere in the request.
 The 2026 framing for this is Anthropic's **context engineering**: the goal is to "find the
 *smallest possible* set of high-signal tokens that maximize the likelihood of some desired
 outcome," because models draw on a finite **attention budget** when parsing context.[^anthropic-ce]
-Cleanup is the L1, manual front edge of that idea — no infrastructure, just deletion.
+Cleanup is the manual, no-infrastructure version of that idea: just deletion.
 
 We score the gain **Medium** and want to be honest about it: cleanup is hygiene, not a
 structural win. It will not 10× your bill the way model right-sizing or batch processing

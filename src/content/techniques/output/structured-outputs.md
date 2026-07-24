@@ -103,7 +103,8 @@ naive way to get it is to *ask* — "respond only with JSON matching this shape"
 parse the text. That works most of the time and fails the rest of the time, and the failure
 mode is expensive: a missing brace, a trailing comma, a stray markdown fence, or a
 chatty preamble makes the parse throw, and the app responds with a **re-ask**, a **retry**,
-or a **second "repair" LLM call** to clean up the mess.
+or a **second "repair" LLM call** to clean up the mess. We've watched this retry-and-repair
+loop quietly inflate the bill on more than one client codebase.
 
 **Structured Outputs** removes that failure class. Instead of asking nicely, you hand the
 provider a **JSON Schema** (or a typed tool/function definition) and the provider
@@ -117,8 +118,7 @@ output must satisfy). It is distinct from **constrained decoding** as a self-hos
 (running your own grammar engine such as Outlines or XGrammar over an open-weight model — see
 that page); here we mean the **managed, provider-side** feature you switch on with a flag.
 
-The cost case must be framed honestly, because it is the most misunderstood part of this
-technique:
+The cost case is worth stating plainly, because it is easy to get wrong:
 
 - **The benefit is indirect.** Structured outputs do **not** reduce raw token counts. They
   remove the *re-ask / retry / repair* loops that broken parsing forces — each of which is a
@@ -179,10 +179,10 @@ shape is the same — pass a schema, get guaranteed-valid output.
    clearest line-item saving.
 3. **Handle the residual failure modes**, which are now *truncation* and *refusal*, not bad
    syntax: set `max_tokens` high enough that a valid object can complete (a cut-off object is
-   still invalid JSON — see *Max-Token Policies*), and branch on the documented refusal
+   still invalid JSON — see *Output Length Control*), and branch on the documented refusal
    signal rather than retrying blindly.[^openai-so-docs]
 
-### The quality-risk caveat (this is the real catch)
+### The quality-risk caveat
 
 Forcing a rigid format can **degrade reasoning accuracy** when the model is made to emit
 schema fields *before* it has finished thinking. The Tam et al. "Let Me Speak Freely?" study
@@ -194,7 +194,7 @@ token first, starving the chain-of-thought. When accuracy drops, you pay *again*
 retries, corrections, and human review — so a careless schema can **raise** total cost even
 while every individual call is cheaper to parse.
 
-The picture is genuinely **nuanced**, which is why this is a *caveat*, not a veto:
+The evidence is mixed, which is why this is a *caveat*, not a veto:
 
 - **The engine and prompt matter.** JSONSchemaBench found that with a good constrained-decoding
   engine, structured generation **improved** downstream accuracy by up to ~4% on the same
@@ -204,7 +204,7 @@ The picture is genuinely **nuanced**, which is why this is a *caveat*, not a vet
   scenarios** on GPT-4o — the swings reported by coarse metrics were largely driven by
   prompt/instruction differences, not the format itself.[^causal-so]
 
-The robust, vendor-neutral rule that reconciles these: **let the model reason in natural
+The vendor-neutral rule that reconciles these: **let the model reason in natural
 language first, then bind the result to the schema** — the "NL-to-format" mitigation the Tam
 study recommends.[^tam-lmsf] In practice that means putting a free-text `reasoning` /
 `scratchpad` field **first** in the schema (so the constrained format still leaves room to
@@ -252,7 +252,7 @@ per call — it is ~18,000 fewer *calls* per day and a chunk of removed code.[^a
 
 - **Truncation masquerading as a "format bug."** With `max_tokens` set too low, a valid object
   gets cut mid-stream and fails to parse — so the guarantee appears to break. That's a
-  budgeting problem, not a structured-output one; pair this with sane *Max-Token Policies*.[^openai-so-docs]
+  budgeting problem, not a structured-output one; pair this with a sane `max_tokens` cap (see *Output Length Control*).[^openai-so-docs]
 
 [^openai-so-blog]: OpenAI, "Introducing Structured Outputs in the API" — <https://openai.com/index/introducing-structured-outputs-in-the-api/>
 [^openai-so-docs]: OpenAI API Docs, "Structured Outputs" — <https://developers.openai.com/api/docs/guides/structured-outputs>

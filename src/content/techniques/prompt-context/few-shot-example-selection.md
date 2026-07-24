@@ -9,7 +9,7 @@ gain: Medium
 riskToQuality: Medium
 effortWhy: "Static pruning needs an eval set to ablate against; dynamic selection adds an embedded example bank and a vector search per request. The pruning step is cheap once you can measure quality; the dynamic step is modest engineering on top of an existing retrieval stack."
 gainWhy: "Removes fixed input tokens from every call — modest per call, but compounds at volume and stacks with caching. Dynamic selection can raise accuracy while cutting, if the query distribution is diverse."
-riskWhy: "Over-pruning can silently drop accuracy on rare/edge classes; dynamic selection can surface unhelpful neighbours and breaks prefix-cache discounts. An eval gate keeps risk manageable."
+riskWhy: "Over-pruning can drop accuracy on rare/edge classes without moving the headline metric; dynamic selection can surface unhelpful neighbours and breaks prefix-cache discounts. An eval gate keeps risk manageable."
 detectionSignals:
   - "A long, static block of 10+ few-shot examples that was set once and never revisited."
   - "Many-shot example blocks sent to a reasoning/instruction-following model (o-series, GPT-5.x, Claude 4.x)."
@@ -172,7 +172,8 @@ examples to produce good results, so try to write prompts without examples first
 Worse, for reasoning-heavy tasks, examples can *actively hurt* by biasing the model toward
 the surface pattern of the demonstrations instead of letting it reason.[^openai-reasoning]
 Many prompts are still carrying a large few-shot block that predates the current model and
-now costs tokens for zero — or negative — benefit.
+now costs tokens for zero — or negative — benefit. We see this often in client codebases:
+the prompt outlives the model it was written for.
 
 ## Detailed Approach & Techniques
 
@@ -196,7 +197,7 @@ The first question is which regime you are in:
 
 #### Prune empirically against an eval set
 
-Pruning "by feel" is how quality silently regresses. Do it as a measured experiment:
+Pruning "by feel" is how quality regresses without anyone noticing. Do it as a measured experiment:
 
 1. **Baseline.** Run the current prompt with all N examples against the eval set; record
    aggregate quality **and per-class / edge-case accuracy** and input tokens/call.
@@ -281,9 +282,9 @@ You rarely build this from scratch:
   and kept fresh as the task drifts — ongoing work a static block doesn't need.
 - **Choosing k is a tuning problem.** Too few shots and you lose coverage; too many and
   you're back to the padded-block cost.[^learnprompting-knn]
-- **It breaks prefix caching — the big one.** Prompt caching only pays off on an **exact,
-  stable prefix**; static content must go first and variable content last, or the cache
-  misses.[^openai-pc-docs] A per-request example set makes the example region *vary every
+- **It breaks prefix caching.** This is the trade-off that most often decides the call.
+  Prompt caching only pays off on an **exact, stable prefix**; static content must go first
+  and variable content last, or the cache misses.[^openai-pc-docs] A per-request example set makes the example region *vary every
   call*, so everything after the first divergence point stops hitting the cache. If your
   fixed few-shot block was previously cached at a deep discount (e.g. Anthropic's 0.1×
   reads), dynamic selection trades a **cheap, cached large block** for an **uncached small

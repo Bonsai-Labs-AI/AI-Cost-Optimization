@@ -89,7 +89,8 @@ The cost of an AI feature is dominated by *how much machine* you throw at each r
 a small model vs. a flagship, reasoning off vs. maximum reasoning effort, a single
 answer vs. an agent that reads hundreds of sources. The common failure is picking the
 **most expensive configuration for everyone, always** — every user gets deep reasoning
-and the flagship model even when the overwhelming majority of their requests are trivial.
+and the flagship model even when most of their requests are trivial. We see this default
+on client projects more often than any other single cost mistake.
 
 **User-controlled quality mode** flips that: you expose the quality/speed/cost choice to
 the user (a fast-vs-thinking toggle, a "deep research" button, or a model picker) and make
@@ -126,8 +127,8 @@ while a flagship `gpt-5.5` is **$5 / $30** and the `o3-deep-research` agent is *
 (Batch) per million — roughly an **order of magnitude** per token between the cheap default
 and the deep path, before you even count the deep path's far larger token *volume*.[^openai-pricing]
 
-So the single most important design decision is **the default**, not the toggle. A bad
-default (expensive-on) throws away the entire benefit because users rarely change defaults.
+So the design decision that matters most is **the default**, not the toggle. A bad
+default (expensive-on) throws away the benefit because users rarely change defaults.
 This is the product-UX expression of Anthropic's agent-design principle: start with the
 simplest (cheapest) solution and only escalate when it "demonstrably improves
 outcomes."[^anthropic-agents]
@@ -150,9 +151,9 @@ The user-facing mode is just a friendly label over a technical knob:
 
 ### Auto-escalation: the default that upgrades itself
 
-The most powerful version keeps the cheap default *and* rescues hard requests
+The strongest version keeps the cheap default *and* rescues hard requests
 automatically. ChatGPT's Instant mode "can automatically escalate to more intensive
-reasoning for difficult requests" — and crucially, those auto-switches don't consume the
+reasoning for difficult requests," and those auto-switches don't consume the
 user's manual Thinking quota.[^openai-gpt55-modes] This preserves the cost win (cheap by
 default) without the quality risk of a too-weak default on a genuinely hard task. It overlaps
 with automated *Dynamic Model Routing*, but here the difference is that the user still owns an
@@ -183,7 +184,7 @@ before committing to an expensive run.
 - **Unclear value framing.** Users need to know *why* they'd pay for the expensive mode
   ("deep research," "think harder") — vague labels get ignored, and the expensive tier
   becomes dead weight you built but nobody pulls.
-- **Wrong default.** Defaulting to the expensive mode "to be safe" silently deletes the
+- **Wrong default.** Defaulting to the expensive mode "to be safe" removes the
   entire saving. Default cheap; escalate on demand (or auto-escalate on detected difficulty).
 
 ## Example Where It Works
@@ -201,7 +202,7 @@ edits; a minority are genuine "research this thoroughly" jobs.
 
 Layer in **cheap-preview-then-commit** for the report generator: a cheap outline is shown
 first; only reports the user approves trigger the full multi-source **deep research** run
-(which, being an agent over hundreds of sources, is the single most expensive action in the
+(which, being an agent over hundreds of sources, is the most expensive action in the
 product).[^openai-deep-research] If a third of full reports were previously abandoned, the
 preview gate removes that third of the most expensive spend outright. This is exactly why
 providers meter deep research rather than run it freely.[^openai-deep-research][^perplexity-deep-research]

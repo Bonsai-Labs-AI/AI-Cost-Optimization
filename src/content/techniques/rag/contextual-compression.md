@@ -118,7 +118,8 @@ that runs through the rest of this page: compression is **an extra model call wi
 own cost and latency**, and it competes against two things that are often cheaper —
 cheap long-context input (especially when the context prefix-caches) and plain L2
 reranking. It is a real win only in a specific regime, and it is genuinely net-negative
-outside it.
+outside it. In client work we reach for reranking and dedup first and only add a compressor
+once those leave real filler behind.
 
 ## Detailed Approach & Techniques
 

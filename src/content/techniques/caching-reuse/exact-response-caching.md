@@ -3,7 +3,7 @@ title: "Exact Response Caching"
 category: caching-reuse
 maturityLevel: 1
 maturityProvisional: false
-shortDescription: "Store the full model response keyed on a normalized, exact request so an identical call returns the stored answer with zero model tokens — the cost problem being repeated identical requests that are re-billed in full."
+shortDescription: "Store the full model response keyed on a normalized, exact request so an identical call returns the stored answer with zero model tokens, instead of re-billing the same request in full every time it repeats."
 effort: Medium
 gain: High
 riskToQuality: Medium
@@ -13,7 +13,7 @@ detectionSignals:
   - "A high-traffic feature has a small set of very popular, repeated queries."
   - "No response-cache layer exists in front of the model, or a naive cache has no TTL/invalidation."
 measurementMethods:
-  - "Cache hit rate: cached-served responses ÷ total requests (see Cache-Hit-Rate Instrumentation)."
+  - "Cache hit rate: cached-served responses ÷ total requests."
   - "Dollars and tokens saved (a hit is a 100% saving on that call)."
   - "Stale-answer incident rate after content/prompt/model changes."
   - "p50/p95 latency on hits vs misses (a hit is a store lookup, not a model call)."
@@ -23,7 +23,6 @@ related:
   - "caching-reuse/prompt-caching-prefix-caching"
   - "caching-reuse/semantic-caching"
   - "caching-reuse/cache-invalidation-strategies"
-  - "caching-reuse/cache-hit-rate-instrumentation"
   - "product-ux/precomputed-content-surfacing"
 sources:
   - id: portkey-cache
@@ -94,7 +93,7 @@ the **complete model response** keyed on a normalized representation of the requ
 next identical request returns the stored answer with **zero model tokens consumed** — a
 100% saving on that call, and a store-lookup latency instead of a generation.
 
-This is a fundamentally different mechanism from **prompt / prefix caching**. Prefix
+This is a different mechanism from **prompt / prefix caching**. Prefix
 caching is a *token-level* provider cache: it reuses the model's internal KV state over a
 shared prompt prefix, still runs the model, and still bills the read (Anthropic's cache
 read is 0.1× input, not zero).[^anthropic-pc] Exact response caching is a *response-level*
@@ -102,12 +101,12 @@ application cache: on a hit the model is **never called at all**. The two stack 
 caching cuts the cost of the calls you *do* make; exact caching removes the calls you don't
 need to make twice.
 
-It sits at **L1**, earning its place as a foundational win precisely because doing it
-*correctly* is real engineering rather than a dictionary lookup. A naive `dict[prompt] = response` is trivial;
-the hard parts — a **normalized key** that neither collides nor fragments, **TTL and
-invalidation** so you never serve a stale or now-wrong answer, and honest judgment about
-**where the hit rate is actually nonzero** — are what separate a cache that saves money
-from one that quietly ships incorrect responses.
+It sits at **L1**. A naive `dict[prompt] = response` is trivial; the real work is a
+**normalized key** that neither collides nor fragments, **TTL and invalidation** so you
+never serve a stale or now-wrong answer, and a clear view of **where the hit rate is
+actually nonzero**. Those are what separate a cache that saves money from one that serves
+wrong answers. In our client work, an under-normalized key is the usual reason a "working"
+cache has a near-zero hit rate.
 
 ## Detailed Approach & Techniques
 
@@ -137,13 +136,13 @@ Two failure modes bracket the design:
   `enable_caching_on_provider_specific_optional_params` for exactly the judgment call of
   which non-standard params belong in the key.[^litellm-cache]
 
-### TTL, expiration, and invalidation — the engineering that matters
+### TTL, expiration, and invalidation
 
 A cached response is a snapshot of a fact that may stop being true. Correctness comes from
 three levers:
 
 1. **Time-based expiry (TTL).** Set an age after which an entry is discarded regardless of
-   anything else — a coarse but robust guard against unbounded staleness. Every managed
+   anything else — a coarse but dependable bound on staleness. Every managed
    layer centers on this: Portkey's `max_age` (min **60s**, max **90 days**, default **7
    days**),[^portkey-cache] Cloudflare's `cf-aig-cache-ttl` (min 60s, max one
    month),[^cf-aig-cache] and LiteLLM's per-entry `ttl` (no built-in default — unset means no
@@ -184,7 +183,7 @@ Exact caching only pays when identical requests actually recur:
   prompts, and any endpoint where the *same input maps to one correct output*.
 - **Near-zero hit rate:** open-ended chat, high-entropy free text, anything with a unique
   per-request body (timestamps, user-specific context, long unique documents). Here two
-  requests are *never* byte-identical, so an exact cache is theater.
+  requests are *never* byte-identical, so an exact cache never hits.
 
 That ~0 case is exactly the **bridge to semantic caching (L3)**: when requests are similar
 but not identical, you match on embedding similarity instead of an exact hash — trading the
@@ -205,7 +204,7 @@ caching when the exact hit rate is provably low but paraphrase volume is high.
   non-trivial (versioned prompts, event-driven purges tied to your data model).
 
 Either way, instrument the hit rate and dollars saved — an un-measured cache is
-indistinguishable from a broken one (see *Cache-Hit-Rate Instrumentation*).
+indistinguishable from a broken one.
 
 ## Example Where It Works
 
@@ -233,11 +232,11 @@ construction key.
   The exact-match key fragments completely and the hit rate is ~0 — this is the case for
   *semantic caching* (or none) instead.
 - **Non-deterministic sampling.** At `temperature > 0` the "correct" output isn't unique;
-  caching pins one sampled response and re-serves it, silently removing the variety the
+  caching pins one sampled response and re-serves it, removing the variety the
   product intended (e.g. a "give me another idea" button that now returns the same idea).
 - **Fast-changing ground truth with a loose TTL.** Caching answers about live prices,
   inventory, or breaking events with a long TTL and no event-based invalidation is the
-  classic staleness bug — you serve a confidently-wrong old answer. If you can't invalidate
+  classic staleness bug — you keep serving the old answer after the data has changed. If you can't invalidate
   on change, keep the TTL below the data's change interval, or don't cache it.[^redis-expire]
 - **Under-normalized keys.** If an incidental per-request field (a timestamp, a nonce, a
   trace ID) leaks into the hashed body, every request is unique and the cache never hits —

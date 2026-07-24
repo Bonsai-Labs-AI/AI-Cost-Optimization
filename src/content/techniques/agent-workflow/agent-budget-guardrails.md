@@ -3,25 +3,25 @@ title: "Agent Budget Guardrails"
 category: agent-workflow
 maturityLevel: 1
 maturityProvisional: false
-shortDescription: "Bound an agent run with code-enforced ceilings (max loops, tool calls, retries, wall-clock, dollars) and a surfaced budget tracker, so a single run can never spiral into an unbounded bill."
+shortDescription: "Put hard limits, enforced in code, on what one agent run can do — max steps, tool calls, retries, time, and dollars — and show the model its remaining budget, so a stuck run gets stopped instead of quietly running up the bill."
 effort: Low
 gain: High
 riskToQuality: Low
-effortWhy: "The ceilings are a few lines of config in any modern agent framework, which ship loop and turn limits as first-class parameters."
-gainWhy: "Guardrails cap the largest single cost risk an agentic product has — a runaway loop — and budget awareness can cut cost ~31% at equal quality."
-riskWhy: "The limits fire only on the pathological tail, leaving the median run untouched, so the risk to quality is negligible."
+effortWhy: "The limits are a few lines of config; every major agent framework ships loop and turn caps as built-in parameters."
+gainWhy: "A runaway loop is the biggest single cost risk an agent product has; caps remove it, and showing the model its budget cut cost ~31% at equal quality in one study."
+riskWhy: "The limits only trigger on runs that are already failing; normal runs never hit them."
 detectionSignals:
-  - "No hard stop — agent loops run until the task is 'done', the provider rate-limits the key, or someone notices the bill."
-  - "Uncapped retries — retry-on-failure has no cap, so a persistently failing tool produces a retry storm of full-priced calls."
-  - "No per-run ceiling — a single run's spend has no upper bound on cost, steps, or wall-clock time."
-  - "Prompt-only budget — the only 'budget control' is an instruction in the system prompt telling the model to be frugal or stop at a limit."
-  - "Spiraling tail runs — occasional runs re-query the same tool and re-read context, costing orders of magnitude more than the median run."
+  - "No hard stop — the loop runs until the model decides it's done, the provider rate-limits the key, or someone notices the bill."
+  - "Uncapped retries — a failing tool gets retried without limit, and every retry is a full-priced call."
+  - "No per-run ceiling — nothing limits how much one run can spend in dollars, steps, or time."
+  - "Prompt-only budget — the only 'budget control' is a sentence in the system prompt asking the model to stay under a limit."
+  - "Expensive outlier runs — an occasional run re-queries the same tool over and over and costs 10–100× a typical run."
 measurementMethods:
-  - "Per-run cost distribution — cost/steps/tool-calls per agent run, watching the p99 and max rather than the mean."
-  - "Runaway incident count — runs terminated by a ceiling and the spend they would have reached uncapped."
-  - "Ceiling hit-rate — percentage of runs that hit each ceiling; too high means it is mis-set, near-zero with a fat tail means you need one."
-  - "Retry-storm rate — repeated identical tool calls or prompts per run."
-  - "Completed vs. abandoned cost — cost-per-completed-task vs. cost-per-abandoned-run (the tail you are trying to cap)."
+  - "Cost per run — track cost, steps, and tool calls per run; watch the p99 and the max, not the mean."
+  - "Runs stopped by a limit — how many, and an estimate of what each would have spent without it."
+  - "Limit hit-rate — share of runs that hit each limit; a high rate means the limit is too tight, and it should stay near zero once set right."
+  - "Repeated identical calls — count of identical tool calls or prompts within a single run."
+  - "Cost per completed task vs. cost sunk into abandoned runs — the abandoned tail is what the limits should shrink."
 status: published
 lastUpdated: "2026-06-29"
 related:
@@ -81,43 +81,42 @@ sources:
 
 ## Overview
 
-An AI agent is, at bottom, a loop: the model proposes an action (usually a tool call),
-the environment returns a result, the result is appended to the context, and the model
-is called again — repeating until it decides the task is done.[^anthropic-agents] That
-"until it decides" is the cost problem. Nothing in the loop itself bounds how many times
-it runs. A tool that keeps failing, a model that keeps re-querying the same source, a
-plan that never converges, or a context that grows quadratically as every turn is
-appended — any of these turns a normal run into an open-ended sequence of full-priced
-provider calls. The single most expensive AI incident most teams ever have is not a wrong
-answer; it is a loop that nobody capped.[^truefoundry-ratelimit]
+An agent is a loop: the model picks an action (usually a tool call), the result comes
+back and is appended to the context, and the model is called again — until the model
+decides the task is done.[^anthropic-agents] That last part is the cost problem. Nothing
+in the loop itself limits how many times it runs. A tool that keeps failing, a model that
+keeps re-querying the same source, a plan that never settles, a context that gets bigger
+every turn so each call costs more than the last — any of these turns a normal run into
+an open-ended series of full-priced API calls. As one practitioner write-up puts it: the
+most expensive AI incident most teams have had "wasn't a wrong answer. It was a
+loop."[^truefoundry-ratelimit]
 
-**Agent budget guardrails** are the controls that put a hard ceiling on a single agent
-run. They absorb what are sometimes listed as separate techniques — loop limits,
-tool-call limits, and retry limits — into one idea, because they are the same mechanism
-applied to different counters. The technique has **two layers** that are easy to
-conflate but must both exist:
+**Agent budget guardrails** put a hard ceiling on what a single run can spend. Loop
+limits, tool-call limits, and retry limits are sometimes listed as separate techniques,
+but they are the same mechanism applied to different counters, so this page treats them
+as one. There are **two layers**, and both need to exist:
 
-1. **Code-enforced ceilings** — deterministic limits checked *before* each model or tool
-   call (max loop iterations, max tool calls, max retries, a wall-clock timeout, a
-   per-run dollar/token budget), backed by a circuit breaker that trips on pathological
-   patterns and terminates or degrades the run.
-2. **Prompt-level budget awareness** — a *tracker* that surfaces the remaining (and
-   consumed) budget to the model on each iteration so it spends its allowance wisely.
+1. **Limits enforced in code** — checked before each model or tool call: max steps, max
+   tool calls, max retries, a wall-clock timeout, a per-run dollar or token budget. When
+   one trips, a circuit breaker stops the run or drops it into a degraded mode.
+2. **Budget awareness in the prompt** — a tracker that tells the model, on each step,
+   how much of its budget is left, so it plans within the constraint instead of spending
+   blindly.
 
-The two layers do different jobs and are not substitutes. Layer 1 is the safety net that
-*guarantees* the run stops; layer 2 makes the run *better* within the budget. The cardinal
-rule is that **hard enforcement must live in code, never in the system prompt**: an agent
-told "stop when you have spent $5" honors it only until it becomes task-motivated not
-to.[^relayplane-runaway] This is a Level 1 win because the controls are a few lines of
-config in any modern agent framework, they carry essentially no quality risk (they only
-fire on the tail), and they cap the largest single cost risk an agentic product has.
+The layers do different jobs and don't substitute for each other: layer 1 guarantees the
+run stops; layer 2 makes the run cheaper and better within the budget. One rule matters
+more than the rest: **the hard stop lives in code, never in the system prompt.** An agent
+told "stop when you have spent $5" follows that instruction right up until finishing the
+task tempts it not to.[^relayplane-runaway] This sits at Level 1 because the limits are a
+few lines of config in any current agent framework, they only trigger on runs that were
+already failing, and they remove the biggest single cost risk an agent product has.
 
 ## Detailed Approach & Techniques
 
-### Layer 1 — Code-enforced ceilings (the non-negotiable layer)
+### Layer 1 — Limits enforced in code (the layer you must have)
 
-Every counter the loop can run away on needs a ceiling, checked deterministically by your
-runtime before the next call is dispatched:
+Every counter the loop can run away on needs a limit, checked by your runtime before the
+next call goes out:
 
 - **Max loop iterations / steps.** A hard stop on the number of agent turns. Frameworks
   ship this as a first-class parameter: LangGraph caps super-steps and raises
@@ -134,53 +133,51 @@ runtime before the next call is dispatched:
 - **Per-run cost / token budget.** Track cumulative spend across the run against a dollar
   or token ceiling and stop when it is reached.[^relayplane-runaway]
 
-When a ceiling is hit, the run should not simply throw and vanish — it should trigger a
-**deterministic circuit-breaker action**: terminate and return the best partial result,
-degrade to a safe read-only mode, or escalate to a human checkpoint.[^anthropic-agents]
-A circuit breaker can also trip *before* a hard ceiling, on pathological signals like cost
-velocity (e.g. spending far faster than budgeted), repeated identical prompts, or
-recognizable loop signatures.[^truefoundry-ratelimit]
+When a limit is hit, the run should not just throw an error and vanish. Decide what
+happens next: return the best partial result, drop to a safe read-only mode, or hand off
+to a human.[^anthropic-agents] A circuit breaker can also trip *before* any hard limit,
+on warning signs: spend rising much faster than planned, repeated identical prompts, or a
+recognizable loop pattern.[^truefoundry-ratelimit]
 
 **Where to enforce — code and gateway, not the prompt.** In-process counters are the
 first line, but they have a gap: if the agent process crashes and restarts, the counters
 reset, and a per-agent implementation has to be re-written (and is inevitably missed) for
 every new agent.[^relayplane-runaway][^truefoundry-ratelimit] The durable pattern is a
 **gateway / proxy layer** that enforces token buckets (returning HTTP 429 with
-`Retry-After`), circuit breakers, and per-key/-team/-customer dollar caps for *every*
-workload uniformly — the same budget-hierarchy machinery covered under *Budget Limits &
-Guardrails*, applied at the level of a single run.[^truefoundry-ratelimit] What you must
+`Retry-After`), circuit breakers, and per-key, per-team, and per-customer dollar caps for
+*every* workload uniformly, so no agent is missed.[^truefoundry-ratelimit] What you must
 not do is delegate the hard stop to the model: a budget written into the system prompt is
 a *suggestion*, and the model will exceed it the moment the task pushes it to.[^relayplane-runaway]
 
-### Layer 2 — Prompt-level budget awareness (the efficiency layer)
+### Layer 2 — Budget awareness in the prompt (the efficiency layer)
 
-The second layer is more subtle and is backed by recent research. The naive assumption is
-that giving an agent a *bigger* tool-call budget makes it perform better. It does not:
-agents lack "budget awareness," so extra budget is wasted and performance plateaus.[^bats-paper]
-The fix is to **surface the budget to the model on every step** — a lightweight "Budget
-Tracker" plug-in that tells the agent how much of its allowance (tool calls, steps, dollars)
-remains, so it can condition its planning on the constraint rather than spending blindly.
+You might assume that giving an agent a *bigger* tool-call budget makes it perform
+better. Measured directly, it doesn't: agents don't track their own spending, so the
+extra budget is wasted and performance plateaus.[^bats-paper] The fix is to **show the
+model its budget on every step** — a lightweight "Budget Tracker" that tells the agent
+how much of its allowance (tool calls, steps, dollars) remains, so its planning takes the
+constraint into account.
 
-The payoff is measured, not hypothetical. In the Budget-Aware Tool-Use study, a Budget
-Tracker matched a standard ReAct agent's accuracy while using **40.4% fewer search calls
-and 31.3% lower cost**; the fuller BATS framework, built on the same awareness, reached
-**24.6% accuracy on BrowseComp versus 12.6% for plain ReAct** under a fixed 100-tool-use
-budget.[^bats-paper] The lesson for product teams is twofold: surfacing the budget both
-*cuts cost at equal quality* and *improves quality at equal budget* — and, critically, it
-is the explicit, in-context budget signal that does the work, not a one-time instruction.
+In the Budget-Aware Tool-Use study, a Budget Tracker matched a standard ReAct agent's
+accuracy while using **40.4% fewer search calls and 31.3% lower cost**; the fuller BATS
+framework, built on the same awareness, reached **24.6% accuracy on BrowseComp versus
+12.6% for plain ReAct** under a fixed 100-tool-use budget.[^bats-paper] Two takeaways:
+showing the budget cuts cost at equal quality, and improves quality at equal budget. And
+it is the per-step, in-context signal that does the work — a one-time instruction at the
+start does not.
 
 ### Putting the layers together
 
-A robust agent run therefore: (1) injects the remaining budget into the context each
-iteration so the model spends wisely (layer 2); and (2) is wrapped by code/gateway
-ceilings that *guarantee* it stops regardless of what the model decides (layer 1). Set
-the ceilings from your observed run distribution — a max set just above the legitimate
-p99 catches true runaways without clipping real work. Tune them by watching the percentage
-of runs that hit each limit: near-zero hits with a fat cost tail means the cap is doing
-its job; a high hit-rate means the limit is too tight or the task is mis-scoped (and is a
-cue to confirm scope with the user — see *Agent Scope Confirmation*). Reducing the number
-of tools and steps a task needs in the first place (*Tool-Use Minimization*) lowers the
-budget you have to grant at all.
+A well-guarded run does two things: (1) it shows the model its remaining budget on every
+iteration so the model spends it deliberately (layer 2); and (2) it is wrapped in code and
+gateway limits that stop it no matter what the model decides (layer 1). Set the limits
+from your observed run distribution — a max just above the legitimate p99 catches real
+runaways without cutting off real work. Then watch the share of runs that hit each limit:
+a high rate means the limit is too tight or the task is mis-scoped (a cue to confirm scope
+with the user — see *Agent Scope Confirmation*); done right, almost no run hits the limit
+and the expensive tail disappears from your cost distribution. Reducing the tools and
+steps a task needs in the first place (*Tool-Use Minimization*) lowers the budget you have
+to grant at all.
 
 ## Example Where It Works
 
@@ -189,19 +186,19 @@ the web, reading results, and synthesizing an answer. The median run makes ~8 to
 and costs a few cents. One day a query about an ambiguous entity sends the agent into a
 spiral: it keeps re-searching slight rephrasings, each result appended to a context that
 grows every turn, every step a full-priced call. Uncapped, that one run would have made
-hundreds of tool calls — practitioner reports describe exactly this shape, an agent
-burning ~$15 in under ten minutes before anyone noticed.[^relayplane-runaway][^truefoundry-ratelimit]
+hundreds of tool calls — one practitioner report describes an agent burning ~$15 in under
+ten minutes before anyone noticed.[^relayplane-runaway][^truefoundry-ratelimit]
 
 With guardrails in place, the run is bounded on both layers. A **Budget Tracker** tells
 the model on each step how many of its allotted tool calls remain, so it stops re-querying
 and commits to an answer earlier — the same effect that cut search calls ~40% at equal
-accuracy in the research benchmark.[^bats-paper] And a **code-enforced ceiling**
-(`max_turns` / `recursion_limit`, a per-run dollar cap, and a wall-clock timeout) trips
-before the run can ever reach the dangerous tail, returning the best partial answer and
-flagging the run for review instead of silently spending.[^openai-agents-maxturns][^langgraph-recursion]
-The median run is untouched; only the pathological tail is clipped, which is exactly the
-distribution you want. Effort is a handful of config lines; the risk to quality is
-negligible because the limits fire only on runs that were already failing.
+accuracy in the research benchmark.[^bats-paper] And a **limit enforced in code**
+(`max_turns` / `recursion_limit`, a per-run dollar cap, and a wall-clock timeout) stops
+the run long before it gets expensive, returning the best partial answer and flagging the
+run for review instead of silently spending.[^openai-agents-maxturns][^langgraph-recursion]
+Normal runs never notice the limits; only the broken ones get cut off. The effort is a
+handful of config lines, and the quality risk is near zero because the limits only fire
+on runs that were already failing.
 
 ## Example Where It Would NOT Work
 
@@ -218,9 +215,9 @@ negligible because the limits fire only on runs that were already failing.
   stop has to be enforced outside the model's judgment.[^relayplane-runaway] (The prompt
   budget tracker is valuable — but only *alongside* the code ceiling, never instead of it.)
 - **Non-agentic / single-shot calls.** A one-shot completion or a simple
-  retrieve-then-answer pipeline has no loop to run away, so loop and tool-call ceilings buy
-  nothing. The relevant cost control there is a `max_tokens` cap and the spend limits of
-  *Budget Limits & Guardrails*, not per-run agent ceilings.
+  retrieve-then-answer pipeline has no loop to run away, so loop and tool-call limits buy
+  nothing. The relevant cost controls there are a `max_tokens` cap and account-level spend
+  limits at the provider or gateway, not per-run agent limits.
 - **In-process counters alone for a crash-restart workload.** If an agent can crash and be
   restarted by an orchestrator, application-level counters reset to zero on each restart and
   a relentless loop simply resumes spending. Durable enforcement has to live in a gateway or

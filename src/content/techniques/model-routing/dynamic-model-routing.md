@@ -24,7 +24,7 @@ related:
   - "model-routing/model-right-sizing"
   - "model-routing/llm-cascades"
   - "model-routing/provider-and-fallback-routing"
-  - "fine-tuning/router-training-from-traffic"
+  - "model-routing/router-training-from-traffic"
 sources:
   - id: routellm-paper
     title: "RouteLLM: Learning to Route LLMs with Preference Data"
@@ -83,6 +83,24 @@ sources:
     accessed: "2026-07-03"
     kind: benchmark
     note: "~8,000 queries, 9 domains, 3 Bloom difficulty levels; five scores. Finding: all routers fall short of the oracle because they are inefficient at recognizing when a cheap model suffices; open-source routers hit ~35% lower cost at <2% accuracy loss."
+  - id: price-reversal
+    title: "The Price Reversal Phenomenon: When Cheaper Reasoning Models Cost More"
+    publisher: "arXiv"
+    authors: "Chen, Zhang, He, Stoica, Zaharia, Zou"
+    year: 2026
+    url: "https://arxiv.org/abs/2603.23971"
+    accessed: "2026-07-21"
+    kind: paper
+    note: "In 32% of model-pair comparisons the lower-listed-price model incurs a HIGHER total cost, reversal up to 28× (e.g. a model listed 80% cheaper costs 38% more across tasks). Cause: variation in thinking-token consumption (up to 900% more) and interaction turns (up to 10× more); per-query cost is hard to predict — thinking tokens vary up to 9.7× on repeated runs of the same query."
+  - id: finops-tokenomics
+    title: "Token Economics: The Atomic Unit of AI Value"
+    publisher: "FinOps Foundation"
+    authors: "J.R. Storment"
+    year: 2026
+    url: "https://www.finops.org/insights/token-economics-the-atomic-unit-of-ai-value/"
+    accessed: "2026-07-21"
+    kind: blog
+    note: "Argues AI cost must be judged on outcome value, not raw token count: 'a model that consumes ten times the tokens of an alternative but produces an outcome worth one hundred times more is economically preferable.'"
 ---
 
 ## Overview
@@ -92,7 +110,7 @@ flagship — regardless of how hard the individual request actually is. But real
 wildly uneven: a large fraction of it is trivially easy (a greeting, a reformat, a short
 lookup, a simple classification) and would be answered identically by a model that costs a
 fraction as much, while only a minority genuinely needs frontier reasoning. Paying flagship
-prices for the easy majority is pure waste.
+prices for the easy majority is wasted spend, and it is a pattern we see often in client work.
 
 **Dynamic model routing** puts a decision layer *in front of* the model: for each request it
 predicts how difficult the input is and dispatches it to the **cheapest model that can still
@@ -128,7 +146,7 @@ A router is a cheap function `f(prompt) → model`. The main families:
   **causal-LLM classifier**.[^routellm-repo] On MT Bench, the matrix-factorization router
   trained on Arena data alone reaches **95% of GPT-4 performance while calling the strong model
   only 26% of the time (~48% cheaper than random routing)**; adding LLM-judge-augmented data
-  halves that to **14% strong-model calls — 75% cheaper**.[^routellm-blog] Crucially, the paper
+  halves that to **14% strong-model calls — 75% cheaper**.[^routellm-blog] The paper also
   shows these routers **transfer to new model pairs at test time** without retraining, so the
   same router generalizes as you swap the underlying strong/weak models.[^routellm-paper]
 
@@ -181,8 +199,8 @@ traffic (the basis of preference/embedding routers).[^routellm-paper]
 
 ### Tuning the threshold with an eval harness
 
-A router is only as good as the difficulty threshold that decides cheap-vs-strong. That
-threshold is set *empirically* against a **quality-cost evaluation suite**: sweep the cutoff,
+A router is only as good as the difficulty threshold that decides cheap-vs-strong. Set that
+threshold *empirically* against a **quality-cost evaluation suite**: sweep the cutoff,
 measure quality retention and cheap-tier share at each point, and pick the operating point that
 holds quality at the bar for the most savings — exactly the cost-vs-quality frontier RouteLLM
 and RouterArena plot.[^routellm-blog][^routerarena] Without that harness you cannot know whether
@@ -200,6 +218,23 @@ you are safely on the frontier or silently degrading quality.
 - **Restricted pool / miscalibration.** Benchmarks show routers that over-prefer expensive models
   save little, and those with a narrow pool leave savings on the table — pick a router (or tune
   one) whose calibration matches *your* traffic.[^routerarena]
+
+### Route on net cost, not per-token price
+
+A router that picks the "cheaper" model by its **list price** can end up spending *more*. Because a
+weaker model often needs more thinking tokens and more tool-use turns to reach the same answer,
+per-token price and per-*task* cost diverge: the *Price Reversal Phenomenon* study finds that in
+**32% of model-pair comparisons the lower-listed-price model incurs a higher total cost, with the
+reversal reaching up to 28×** (e.g. a model listed 80% cheaper costing 38% more across tasks) —
+driven by one model consuming up to **900% more thinking tokens** or taking **10× more interaction
+turns** on the same query.[^price-reversal] Two design implications follow: set the router's
+escalation threshold on **measured cost-per-completed-task**, not sticker price; and monitor
+**trajectory length** (output tokens and tool-call turns) per tier as a guard metric — a cheap tier
+whose answers or agent loops balloon in length is not actually cheap. This is the routing-side form
+of the general rule that "a model that consumes ten times the tokens of an alternative but produces
+an outcome worth one hundred times more is economically preferable."[^finops-tokenomics] It also
+compounds the misroute risk above: a misrouted hard query is not just lower-quality, it can be more
+*expensive* than routing it to the strong model directly.
 
 ## Example Where It Works
 
@@ -238,3 +273,5 @@ suite makes the quality-hold auditable.
 [^openai-gpt5-dev]: OpenAI, "Introducing GPT-5 for developers" — <https://openai.com/index/introducing-gpt-5-for-developers/>
 [^notdiamond]: Not Diamond Docs, "What is Model Routing?" — <https://docs.notdiamond.ai/docs/what-is-model-routing>
 [^routerarena]: "RouterArena: An Open Platform for Comprehensive Comparison of LLM Routers," arXiv — <https://arxiv.org/html/2510.00202v1>
+[^price-reversal]: Chen, Zhang, He, Stoica, Zaharia, Zou, "The Price Reversal Phenomenon: When Cheaper Reasoning Models Cost More," arXiv 2026 — <https://arxiv.org/abs/2603.23971>
+[^finops-tokenomics]: FinOps Foundation (J.R. Storment), "Token Economics: The Atomic Unit of AI Value," 2026 — <https://www.finops.org/insights/token-economics-the-atomic-unit-of-ai-value/>

@@ -23,7 +23,6 @@ related:
   - "model-routing/model-right-sizing"
   - "model-routing/dynamic-model-routing"
   - "output/output-length-control"
-  - "output/output-length-control"
   - "output/streaming-with-early-stop"
   - "product-ux/user-controlled-quality-mode"
 sources:
@@ -75,6 +74,15 @@ sources:
     accessed: "2026-07-02"
     kind: benchmark
     note: "GPT-5.5 Pro on AIME: low 69.3% → medium 79.3% → high 91.7% (+22.4 pts low→high) but ~17× cost and 5–60× latency; code-refactor quality peaks at medium ('high adds little'). Cost/quality crossover is task-specific."
+  - id: price-reversal
+    title: "The Price Reversal Phenomenon: When Cheaper Reasoning Models Cost More"
+    publisher: "arXiv"
+    authors: "Chen, Zhang, He, Stoica, Zaharia, Zou"
+    year: 2026
+    url: "https://arxiv.org/abs/2603.23971"
+    accessed: "2026-07-21"
+    kind: paper
+    note: "In 32% of model-pair comparisons the lower-listed-price model incurs a HIGHER total cost (reversal up to 28×; e.g. a model listed 80% cheaper costing 38% more across tasks) because reasoning models vary enormously in thinking-token volume — one model can use 900% more thinking tokens or take 10× more turns than another on the same query; thinking-token counts vary up to 9.7× on repeated runs of one query."
 ---
 
 ## Overview
@@ -85,7 +93,7 @@ they emit the visible answer. Those hidden tokens are **billed as output tokens*
 most expensive token class, and they routinely *dominate* a request's cost: a call that
 returns a two-line answer can burn thousands of unseen reasoning tokens first.[^openai-reasoning][^anthropic-thinking][^openrouter-reasoning]
 
-The trap is that this cost is invisible in the response body and — critically — is **not
+The catch is that this cost is invisible in the response body and is **not
 bounded by `max_tokens`**. On OpenAI, reasoning tokens count *against* `max_output_tokens`,
 so a request can spend the entire budget thinking and return a response with `status:
 incomplete` and **no visible output at all**, while you still pay for the input and every
@@ -93,13 +101,14 @@ reasoning token.[^openai-reasoning] On Anthropic the thinking `budget_tokens` mu
 below `max_tokens` and you are billed for the **full** thinking process, not the short
 summary you see.[^anthropic-thinking]
 
-Reasoning-token budgeting is the deliberate practice of **matching reasoning effort to task
+Reasoning-token budgeting means **matching reasoning effort to task
 difficulty** — turning thinking down (or off) for easy work and reserving high effort for
 genuinely hard problems. It is a *single parameter* to change (hence **Low effort**), but
 the payoff is **High**, because on reasoning-model workloads the hidden output tokens are
-often the single largest line on the bill. The risk is **Medium**: cut effort too far on a
+often the largest line on the bill. The risk is **Medium**: cut effort too far on a
 hard task and accuracy drops, so it belongs at **Level 2** — a measured, eval-backed dial,
-not a blind toggle.
+not a blind toggle. On reasoning-model workloads, this is one of the first bills we check
+in our client work.
 
 ## Detailed Approach & Techniques
 
@@ -150,7 +159,7 @@ Two failure modes follow:
    the ordering explicitly: `budget_tokens` must be strictly below `max_tokens` (except with
    interleaved thinking, where the budget spans a whole turn).[^anthropic-thinking]
 
-So "cap the cost with `max_tokens`" is a false comfort on reasoning models — the real lever
+So "cap the cost with `max_tokens`" does not hold on reasoning models — the real lever
 is the *effort/budget* dial itself.
 
 ### Task-matching: where effort earns its tokens (and where it's waste)
@@ -181,6 +190,19 @@ factual lookups should run at **minimal / thinking-off**.
 4. **Measure reasoning tokens as a share of output** and watch for incomplete responses;
    both are the instrumentation that keeps the dial honest.
 
+### List price misleads on reasoning models
+
+Because thinking-token volume varies so much between reasoning models, the cheaper model *by
+list price* is often the more expensive one in practice. An economic study of reasoning models
+found the lower-listed-price model incurred a **higher** total cost in **32% of model-pair
+comparisons** (the reversal reaching up to **28×** — e.g. a model listed 80% cheaper costing
+38% more across tasks), because one model can burn **900% more thinking tokens**, or take
+**10× more turns**, than another on the identical query.[^price-reversal] The same query re-run
+on one model even varies in thinking tokens by up to **9.7×**, so per-query cost is hard to
+predict at all.[^price-reversal] The practical rule: when you compare two reasoning models,
+rank them by **measured cost per completed task on your own traffic**, not by the per-token
+rate on the pricing page.
+
 ## Example Where It Works
 
 A support-ticket pipeline classifies ~500,000 tickets/day into 20 categories and extracts a
@@ -200,7 +222,7 @@ label accuracy is unchanged.
 ## Example Where It Would NOT Work
 
 A competition-math tutor and a multi-file code-refactoring agent both live at the **hard end**
-of the curve. Here, dialling effort down is a false economy: dropping GPT-5.5 Pro from high
+of the curve. Here, dialling effort down costs more than it saves: dropping GPT-5.5 Pro from high
 to low effort on AIME-style problems sheds **~22 accuracy points**, and the refactor task
 needs at least medium to pass its integration tests.[^effort-benchmark] The wrong answers
 produced at low effort trigger retries, human rework, or a bad merge — costing far more than
@@ -219,3 +241,4 @@ only real control is the effort/budget dial itself.[^openai-reasoning][^anthropi
 [^openrouter-reasoning]: OpenRouter Documentation, "Reasoning Tokens" — <https://openrouter.ai/docs/guides/best-practices/reasoning-tokens>
 [^overthink-eval]: Srivastava, Hussain, Srinivasan, Wang (Virginia Tech), "Do LLMs Overthink Basic Math Reasoning? Benchmarking the Accuracy-Efficiency Tradeoff in Language Models," arXiv — <https://arxiv.org/html/2507.04023v3>
 [^effort-benchmark]: Digital Applied, "Reasoning Effort: Cost vs Quality Benchmarks 2026" — <https://www.digitalapplied.com/blog/reasoning-effort-cost-vs-quality-benchmarks-2026>
+[^price-reversal]: Chen, Zhang, He, Stoica, Zaharia, Zou, "The Price Reversal Phenomenon: When Cheaper Reasoning Models Cost More," arXiv 2026 — <https://arxiv.org/abs/2603.23971>

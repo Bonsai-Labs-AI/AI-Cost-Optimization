@@ -3,7 +3,7 @@ title: "Tool-Use Minimization"
 category: agent-workflow
 maturityLevel: 1
 maturityProvisional: false
-shortDescription: "Cut the token cost of an agent's tools — trim tool count and description bloat, and load tools and skills lazily — so you stop re-sending a huge static tool catalog on every single agent step."
+shortDescription: "Cut the token cost of an agent's tools — trim tool count and description bloat, and load tools and skills lazily — so you stop re-sending a large static tool catalog on every agent step."
 effort: Medium
 gain: High
 riskToQuality: Low
@@ -80,23 +80,24 @@ sources:
 
 An agent's tools are not free context. Every function/tool definition — its name, its
 description, and the full JSON schema for each argument — is serialized into the request
-and counts as input tokens. Critically, **the entire tool catalog is re-sent on every
+and counts as input tokens. **The entire tool catalog is re-sent on every
 step of an agent loop**, because the model must see all available tools to decide what to
 call next. So a large static tool block is not a one-time cost: it is a per-step tax that
 multiplies by the number of turns in a run.[^anthropic-advanced-tool-use][^mcp-context-tax]
 
 With the rise of MCP (Model Context Protocol), it became easy to bolt many servers onto
-one agent — and easy to blow up the context. Connecting just three common servers (GitHub,
+one agent — and just as easy to fill the context window. Connecting just three common servers (GitHub,
 Slack, Sentry — roughly 40 tools) can consume **~143,000 of a 200,000-token window (72%)
 before the user even types a query**, and that block is repaid on every turn.[^mcp-context-tax]
-Anthropic itself measured internal tool definitions consuming **134K tokens** before
+Anthropic measured internal tool definitions consuming **134K tokens** before
 optimization.[^anthropic-advanced-tool-use] A single MySQL MCP server exposing 106 tools
 serializes **~54,600 tokens on every initialization**, despite a typical request needing
-only 2–3 of those tools.[^layered-token-tax]
+only 2–3 of those tools.[^layered-token-tax] In our client work, the tool catalog is
+usually the first thing we measure.
 
-Tool-Use Minimization attacks this on three fronts: **use fewer tools**, **make each tool
+Tool-Use Minimization works on three fronts: **use fewer tools**, **make each tool
 definition leaner**, and **load tools (and agent skills) lazily** — only the ones relevant
-to the current step. It is a **double win**: cutting the catalog both saves tokens *and*
+to the current step. Cutting the catalog does two things at once: it saves tokens *and*
 improves the model's ability to pick the right tool, since selection accuracy degrades once
 a toolset grows past ~30–50 tools.[^anthropic-tool-search] It sits at **L1** because
 the core levers — trimming tool count, tightening descriptions, and enabling deferred
@@ -115,9 +116,9 @@ that justifies the work.
 
 ### 2. Trim the tool count (fewer tools, better selection)
 
-The cheapest lever is simply **not loading tools you don't need**. Audit which tools an
-agent actually calls and remove or gate the rest. This is a genuine double win: Anthropic's
-own evals show tool-selection accuracy *rising* when the model isn't drowning in options —
+The cheapest lever is **not loading tools you don't need**. Audit which tools an
+agent actually calls and remove or gate the rest. Anthropic's evals show tool-selection
+accuracy *rising* when the model picks from fewer options —
 Opus 4 went from **49% → 74%** and Opus 4.5 from **79.5% → 88.1%** on MCP evaluations once
 only the relevant tools were surfaced.[^anthropic-advanced-tool-use] Fewer tools = fewer
 tokens *and* fewer wrong-tool calls (each of which is itself a wasted, billed step).
@@ -131,7 +132,7 @@ restating in a description what the schema already encodes. A "lazy hydration" e
 the 106-tool MySQL server that served a minimal manifest first and only fetched full schemas
 on demand cut the block from **54,604 → 4,899 tokens (~91%)**.[^layered-token-tax]
 
-### 4. Deferred / dynamic tool loading (the big lever)
+### 4. Deferred / dynamic tool loading
 
 Rather than sending the full catalog into context on every step, **retrieve only the tools
 relevant to the current step**. Anthropic's **Tool Search Tool** implements this natively:
@@ -146,7 +147,7 @@ catalog and the API expands the matches into full definitions on demand.[^anthro
   preserving ~95% of the window).[^anthropic-advanced-tool-use]
 - In Claude Code, search-based discovery dropped tool definitions from **10K+ → ~3K tokens
   per request**.[^layered-token-tax]
-- Crucially, `defer_loading` **preserves prompt caching**: deferred tools are kept out of the
+- `defer_loading` **preserves prompt caching**: deferred tools are kept out of the
   cached prefix, so the static prefix stays byte-identical and cache hits are not
   broken.[^anthropic-tool-search]
 

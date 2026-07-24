@@ -77,15 +77,16 @@ It is the sibling of context budgeting and pruning, but a distinct lever: budget
 pruning decide *how much* context to send; packing decides the *shape* of whatever you
 do send.
 
-The cost problem it solves is quiet but persistent. The same facts can be serialized in
+The waste here is easy to miss. The same facts can be serialized in
 ways that differ by 15–30% in token count — deeply-nested JSON with quotes and braces on
 every field versus a compact Markdown table, for example.[^openai-md-tokens] The same
 information can be restated two or three times across a system prompt, a tool description,
 and a few-shot example. And the *order* in which the blocks are placed decides whether the
-provider's prefix cache fires or misses — a purely mechanical choice that can swing input
-cost by an order of magnitude.[^anthropic-pc][^openai-pc-docs] None of these change the
-answer the model should give; they change what you pay to get it, and often the quality of
-the parse on the way in.
+provider's prefix cache fires or misses — a mechanical choice that can swing input cost by
+an order of magnitude.[^anthropic-pc][^openai-pc-docs] None of these change the answer the
+model should give; they change what you pay to get it, and often the quality of the parse
+on the way in. A volatile value sitting at the top of the system prompt is something we run
+into on most client engagements.
 
 Because doing it well requires knowing the target model's format conventions, reasoning
 about cache prefixes, and verifying against an eval that quality held, it is a
@@ -169,14 +170,14 @@ addressable by ID so a later step can cite a result instead of the model re-emit
   signal. One clear delimiter per block is enough.
 - **Put long-form data at the top, the query at the end** for long-context prompts.
   Anthropic notes this ordering, with the query last, "can improve response quality by up
-  to 30% in tests, especially with complex, multi-document inputs" — a rare case where the
-  cheaper layout is also the higher-quality one.[^anthropic-bestpractices]
+  to 30% in tests, especially with complex, multi-document inputs" — here the cheaper layout
+  is also the higher-quality one.[^anthropic-bestpractices]
 
 ### 6. Verify against an eval
 
 Because packing changes both token count and how the model reads the prompt, confirm on a
 quality-cost eval that the answer quality held while tokens dropped. This is why the
-technique sits at L2: the gain is real but the safe version is measured, not assumed.
+technique sits at L2: you have to verify that quality held, not assume it.
 
 ## Example Where It Works
 

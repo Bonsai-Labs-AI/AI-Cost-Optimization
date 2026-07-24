@@ -188,8 +188,8 @@ first asks: *"Which product, and should I focus on pricing, features, or market 
 a ~half-cent exchange[^anthropic-pricing] — then previews a three-step plan for approval.
 The expensive loop now runs **once, in the right direction**. Even a modest rejection rate
 (say 20% of ambiguous requests previously going the wrong way) makes the ~700× cost
-asymmetry overwhelmingly positive, while the reported retry reduction (4.1 → 1.3 per
-session) shows the effect is real, not hypothetical.[^active-questioning]
+asymmetry overwhelmingly positive, and the reported retry reduction (4.1 → 1.3 per
+session) shows the same effect measured in practice.[^active-questioning]
 
 ## Example Where It Would NOT Work
 

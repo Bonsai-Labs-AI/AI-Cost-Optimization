@@ -119,8 +119,8 @@ tune it" profile is why this sits at **Level 3**.
 Scalar quantization maps each float32 component onto an 8-bit integer by calibrating the
 value range of a dimension across the corpus. The result is **4× smaller** storage and RAM,
 plus a meaningful search speedup (~**3.66×** on CPU exact search in Hugging Face's
-benchmark; Qdrant reports a comparable band).[^hf-embed-quant][^qdrant-quant] Crucially,
-the quality cost is tiny: with a rescore step (`rescore_multiplier` of 4) int8 retains
+benchmark; Qdrant reports a comparable band).[^hf-embed-quant][^qdrant-quant] The
+quality cost is tiny: with a rescore step (`rescore_multiplier` of 4) int8 retains
 **~99%** of baseline retrieval performance.[^hf-embed-quant] Cohere ships int8 directly
 from its Embed v3 model and reports a media company with **10 million** article embeddings
 cutting its vector-DB bill from **$5,600/month to $1,400/month** with no noticeable quality
@@ -201,7 +201,7 @@ be invisible to users once rescoring is on.[^cohere-int8-binary]
 - **Small corpora.** A product-docs chatbot with **40,000** chunks has a vector index of a
   few hundred megabytes that fits in the free tier of any managed vector DB. A 32× reduction
   of a rounding-error cost saves nothing meaningful while adding a quantization + rescoring
-  pipeline to build and maintain — pure negative ROID at this scale.
+  pipeline to build and maintain — pure negative ROI at this scale.
 - **Token-dominated bills.** If the RAG system's cost is overwhelmingly the **LLM
   generation** tokens (long answers, big retrieved context stuffed into the prompt), this
   technique touches none of it — it is vector-DB infra, not tokens. The right levers there

@@ -24,7 +24,7 @@ lastUpdated: "2026-07-14"
 related:
   - "prompt-context/learned-prompt-compression"
   - "prompt-context/context-offloading"
-  - "caching-reuse/provider-native-context-management"
+  - "prompt-context/provider-native-context-management"
   - "caching-reuse/summary-caching"
   - "agent-workflow/agent-memory-management"
   - "rag/reducing-retrieved-chunk-count"
@@ -143,7 +143,7 @@ that means every subsequent turn re-sends — and re-bills — the accumulated t
 the beginning. The per-turn cost does not grow linearly with session length: it grows
 **quadratically**, because a session of *N* turns processes the equivalent of `1 + 2 + … + N`
 turn-prefixes. Left unmanaged, a long support chat or a multi-hour agent run spends most of
-its budget re-encoding history, and eventually slams into the context-window limit and
+its budget re-encoding history, and eventually hits the context-window limit and
 fails.[^anthropic-compaction][^anthropic-context-engineering]
 
 **Context reduction** is the category of techniques that interrupt this accumulation before

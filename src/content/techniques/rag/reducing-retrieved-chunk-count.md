@@ -3,12 +3,12 @@ title: "Reducing Retrieved Chunk Count"
 category: rag
 maturityLevel: 1
 maturityProvisional: false
-shortDescription: "Lower the number of retrieved chunks (top-k) passed to the generator so the prompt is dominated by the answer's evidence, not defensive over-fetch — the single highest-ROI cost lever in a RAG pipeline."
+shortDescription: "Lower the number of retrieved chunks (top-k) passed to the generator so the prompt is dominated by the answer's evidence, not defensive over-fetch — the highest-ROI cost lever in a RAG pipeline."
 effort: Low
 gain: High
 riskToQuality: Medium
 effortWhy: "Lowering top-k is a configuration change plus one rerank call, so the implementation effort is low."
-gainWhy: "Retrieved context is often ~74% of input and most apps over-fetch 3–5x, making top-k the single highest-ROI cost lever in RAG."
+gainWhy: "Retrieved context is often ~74% of input and most apps over-fetch 3–5x, making top-k the highest-ROI cost lever in RAG."
 riskWhy: "Cut k too far and you drop the chunk holding the answer, so recall must be protected with reranking — a medium quality risk."
 detectionSignals:
   - "Untuned high top-k — k is fixed at 10–20 'to be safe' and has never been tuned against an eval set."
@@ -90,12 +90,13 @@ teams never revisit) the context outweighs the question by **one to two orders o
 in tokens, and because input is the only thing growing, query cost scales almost linearly with
 k.
 
-That makes **lowering top-k the single highest-ROI cost lever in RAG.** Most RAG applications
+That makes **lowering top-k the highest-ROI cost lever in RAG.** Most RAG applications
 over-fetch by **3–5×** relative to what the model meaningfully uses, so the easy fraction of
 those tokens can simply be removed.[^tokencompany-rag] On a workload of 100,000 queries/day on
 a mid-tier model (~$3 / MTok input), the retrieved-context portion of the bill is on the order
 of **$22,500/month** — cutting k from 10 to 4 cuts that line item by roughly **60%**, with the
-rest of the prompt untouched.[^tokencompany-rag][^anthropic-pricing]
+rest of the prompt untouched.[^tokencompany-rag][^anthropic-pricing] In our client work, an
+untuned top-k is usually the first thing we look at on a RAG bill.
 
 The catch — and why this sits at **Level 1** with **Medium** quality risk rather than Low — is
 that k is not free to lower: cut it too far and you drop the chunk that held the answer. The

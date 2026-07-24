@@ -23,7 +23,6 @@ related:
   - "prompt-context/few-shot-example-selection"
   - "prompt-context/context-window-budgeting"
   - "prompt-context/structured-context-packing"
-  - "prompt-context/few-shot-example-selection"
   - "caching-reuse/prompt-caching-prefix-caching"
 sources:
   - id: llmlingua-paper
@@ -119,7 +118,7 @@ The original LLMLingua is a **coarse-to-fine** pipeline with two ideas that matt
    method accounts for interdependence between remaining tokens.[^llmlingua-paper][^llmlingua-blog]
 
 The compressed prompt is often **not human-readable** — it looks like clipped shorthand — but
-the target LLM still recovers the task, which is the whole trick.[^llmlingua-blog]
+the target LLM still recovers the task.[^llmlingua-blog]
 
 ### LLMLingua-2 — faster, task-agnostic, encoder-based
 
@@ -178,7 +177,7 @@ context from ~6,000 to ~1,500 input tokens per call while holding answer accurac
 bar — in line with the papers' "~4× fewer tokens with maintained or improved accuracy" on
 retrieval QA.[^longllmlingua-paper][^char-compression-eval] Because input tokens dominate the
 bill and there was no cache to lose, the net saving is large even after paying for the lightweight
-encoder compressor. This is the sweet spot: **long, redundant, per-request-unique context**.
+encoder compressor. This is where it fits best: **long, redundant, per-request-unique context**.
 
 ## Example Where It Would NOT Work
 

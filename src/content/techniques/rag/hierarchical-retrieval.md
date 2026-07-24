@@ -10,7 +10,7 @@ riskToQuality: Medium
 detectionSignals:
   - "Flat top-k over a large corpus, with a big k 'to be safe' inflating retrieved chunks and context tokens."
   - "Many small chunks retrieved to reconstruct a single answer that spans a structured document set."
-  - "Multi-hop or 'holistic' questions (summarize/compare across a document) that flat chunk retrieval answers poorly."
+  - "Multi-hop or cross-document questions (summarize/compare across a document) that flat chunk retrieval answers poorly."
   - "Retrieval recall is fine but context is bloated with adjacent low-value chunks pulled in for safety."
 measurementMethods:
   - "Retrieved units per query (chunks/nodes) and LLM-context tokens per query, before vs. after."
@@ -92,7 +92,8 @@ The default RAG retriever is **flat top-k**: chunk the whole corpus into uniform
 embed them all, and at query time pull the *k* most similar chunks straight into the
 prompt. It works, but it has two failure modes that both cost money. First, to be safe
 teams inflate *k* — retrieving 15–20 chunks so the answer is *probably* in there — which
-drags a lot of adjacent, low-value text into the LLM context. Second, "holistic" or
+drags a lot of adjacent, low-value text into the LLM context. On client RAG systems we
+see this inflated *k* far more often than a real hierarchy. Second, global or
 multi-hop questions ("summarize the section," "compare A and B across the document") have a
 real **semantic gap** between the wording of the question and any single leaf chunk, so
 flat retrieval either misses or over-retrieves.[^raptor-paper]
@@ -151,7 +152,7 @@ bottom-up, building a tree whose upper layers are LLM-generated summaries of the
 below.[^raptor-paper][^raptor-repo] Queries can match a high-level summary that a single leaf
 chunk would never surface, then the summary stands in for a whole cluster of leaves. RAPTOR's
 best-performing query mode ("collapsed tree") flattens all layers and pulls top nodes until a
-**2000-token budget** (~top-20 nodes) is hit — and crucially, a large share of those nodes
+**2000-token budget** (~top-20 nodes) is hit — and a large share of those nodes
 come from the **summary layers, not leaves**: on QuALITY, 32% of retrieved nodes are non-leaf
 summaries; on NarrativeQA, **57%** are.[^raptor-html] Those summary units are *substituting*
 for many leaf chunks — that is the "fewer units at equal or better recall" effect made
@@ -193,14 +194,14 @@ Pairs naturally with **reranking** (rank the merged/hierarchical candidates) and
 
 A legal-research assistant indexes **200,000 pages** across long, structured contracts and
 case files. Users ask both pinpoint questions ("what's the indemnity cap in exhibit C?") and
-holistic ones ("summarize the parties' obligations across the master agreement").
+cross-document ones ("summarize the parties' obligations across the master agreement").
 
-- **Flat top-k baseline:** to answer holistic questions at acceptable recall, the team runs
+- **Flat top-k baseline:** to answer cross-document questions at acceptable recall, the team runs
   **k = 20** small chunks per query — many of them adjacent, redundant, or only tangentially
   relevant — and still misses cross-section answers because no single leaf chunk states the
   synthesis.
 - **Hierarchical (RAPTOR-style summary tree + auto-merge):** a summary node captures each
-  contract section, so holistic queries match a **handful of summary units** instead of
+  contract section, so cross-document queries match a **handful of summary units** instead of
   scraping 20 leaves, and pinpoint queries still hit precise leaves that merge up to their
   parent clause. At the same **~2000-token retrieval budget**, roughly a third of the units
   now come from summary layers, standing in for clusters of leaves.[^raptor-html] Recall on

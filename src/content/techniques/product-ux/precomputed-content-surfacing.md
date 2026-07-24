@@ -183,10 +183,10 @@ Precompute pays when the amortized generation cost beats live generation:
 
 Equivalently, precompute an item once its **expected serve count exceeds ~0.5** over its
 freshness lifetime (because batch generation is half-price, even content viewed roughly
-once can break even, and anything viewed many times is a landslide win). The failure mode
+once can break even, and anything viewed many times wins easily). The failure mode
 is the mirror image: precomputing **rarely-viewed tail** content means generating thousands
 of items that are served zero or one times — you pay generation cost for content nobody
-sees, which is *worse* than lazy live generation. The whole skill is drawing the head/tail
+sees, which is *worse* than lazy live generation. The skill is drawing the head/tail
 line correctly.[^breslau-zipf][^nng-zipf]
 
 ## Example Where It Works

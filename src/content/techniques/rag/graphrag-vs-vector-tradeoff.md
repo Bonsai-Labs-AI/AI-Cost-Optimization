@@ -133,7 +133,7 @@ The indexing bill is not fixed. Two levers cut it:
   RAG's**. At a mid query budget it matches or beats competitors at **~4% of GraphRAG
   global-search query cost**, and at a high budget reaches **comparable global-query
   quality to GraphRAG Global Search at >700× lower query cost**.[^lazygraphrag] LazyGraphRAG
-  substantially collapses the indexing-cost argument against graph approaches — if you
+  largely removes the indexing-cost argument against graph approaches — if you
   reach for a graph method at all, it is usually the right default over full GraphRAG.
 - **FastGraphRAG / lighter extraction** trades some description richness for "much lower
   language model cost" during indexing.[^graphrag-methods]

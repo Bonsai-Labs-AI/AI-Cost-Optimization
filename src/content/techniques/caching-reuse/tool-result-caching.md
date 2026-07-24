@@ -14,7 +14,7 @@ detectionSignals:
   - "Agents re-call the same tool with identical arguments within a run (repeated web-fetch, DB lookup, or catalog query)."
   - "The same read tools are invoked across separate runs/sessions for the same inputs, each hitting the external system fresh."
   - "No tool-result memoization layer — every tool_use block re-executes end to end."
-  - "Fat, deterministic tool outputs (documents, API payloads) are re-fetched and re-tokenized into context repeatedly."
+  - "Large, deterministic tool outputs (documents, API payloads) are re-fetched and re-tokenized into context repeatedly."
 measurementMethods:
   - "Tool-call cache hit rate (cached tool results ÷ total tool invocations), overall and per tool."
   - "External tool cost saved (API/search/fetch charges avoided) and tool-execution latency saved."
@@ -119,9 +119,9 @@ and, on a repeat, return the stored result instead of re-executing.[^dev-idempot
 saves both the external execution cost **and** the work of re-fetching and re-tokenizing the
 result into context. It sits at **Level 2** not because the cache is hard to build — it
 isn't — but because of the **freshness problem**: external data changes underneath you, so a
-naïvely-cached tool result can silently feed the agent **stale** information. Getting the
-per-tool TTL and invalidation right is the real engineering, and it is why this is a
-deliberate-engineering technique rather than a config toggle.
+naïvely-cached tool result can feed the agent **stale** information with no visible error.
+Getting the per-tool TTL and invalidation right is the real work — and in our client work,
+that per-tool cacheability call is where teams tend to get it wrong.
 
 ## Detailed Approach & Techniques
 
@@ -140,7 +140,7 @@ The dividing line is **idempotency and determinism**:
   queries).[^channel-idempotent][^dev-idempotent] Caching a write is a correctness bug;
   caching a volatile read is a *freshness* bug.
 
-A crucial distinction: **caching a read is not the same as an idempotency key on a write.**
+One distinction to keep straight: **caching a read is not the same as an idempotency key on a write.**
 The read cache exists to skip redundant work in the agent loop; an idempotency key exists to
 stop a retried *write* from firing twice.[^channel-idempotent] Cacheability is a **per-tool
 property** — the engineer must classify each tool, not blanket-cache the toolset.[^dev-idempotent]

@@ -21,7 +21,6 @@ status: published
 lastUpdated: "2026-07-03"
 related:
   - "caching-reuse/prompt-caching-prefix-caching"
-  - "caching-reuse/cache-hit-rate-instrumentation"
   - "caching-reuse/tool-result-caching"
   - "prompt-context/structured-context-packing"
   - "agent-workflow/agent-memory-management"
@@ -134,9 +133,9 @@ a read.[^manus][^anthropic-pc]
 Make the context **append-only**: never edit a previous action or observation in place;
 add new turns at the end. And ensure serialization is **deterministic** — if your JSON
 serializer re-orders keys, or whitespace/formatting drifts between steps, the prefix
-diverges even though the semantic content is identical.[^manus] The single most damaging
+diverges even though the semantic content is identical.[^manus] The most damaging
 pattern is putting **mutable "working memory" or scratch state inside the cached prefix**:
-because it changes almost every step, it silently invalidates everything below it. This is
+because it changes almost every step, it invalidates everything below it. This is
 exactly what happened to ProjectDiscovery's agent "Neo" (a 20,000+-token system prompt);
 the fix was to move that dynamic content out of the prefix and into a **trailing
 `<system-reminder>` user message** — a pure reordering, no logic change.[^projectdiscovery-pc]

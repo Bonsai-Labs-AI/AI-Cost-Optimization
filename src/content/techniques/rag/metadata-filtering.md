@@ -106,17 +106,18 @@ the ANN step, so the engine only searches the candidate set that matches — for
 shrinking a 10-million-vector index down to the ~1,000 vectors belonging to one customer's
 current project.[^pinecone-filter-docs][^pinecone-namespaces]
 
-It is important to be honest about **where the win actually lands**, because this technique is
-easy to oversell. The primary, direct benefit is **vector-database compute and precision**:
+The win lands in a specific place, and the technique is easy to oversell. The primary,
+direct benefit is **vector-database compute and precision**:
 fewer vectors scanned means less ANN work per query, lower retrieval latency, and a returned
 set that is *exactly* on-scope rather than padded with off-tenant or stale matches.[^pinecone-filtering]
 There is a real but **downstream and secondary** token benefit — a tighter, more relevant
 candidate set means fewer junk chunks slip into the generation prompt — but the LLM-token
 savings come mostly from *how many chunks you ultimately pass* (see *Reducing Retrieved Chunk
-Count*), not from the filter itself. And there is a third payoff that is arguably more
-important than cost in regulated or multi-tenant products: **correctness and security**.
-Scoping a query to a tenant or an ACL is the mechanism that stops one customer's vectors from
-ever surfacing in another customer's results.[^pinecone-namespaces]
+Count*), not from the filter itself. In regulated or multi-tenant products a third payoff
+often matters more than cost: **correctness and security**. Scoping a query to a tenant or
+an ACL is the mechanism that stops one customer's vectors from ever surfacing in another
+customer's results.[^pinecone-namespaces] In our client work, tenant scoping is one of the
+first things we check on any multi-tenant RAG system.
 
 That profile — near-zero engineering effort, modest-but-real infra/precision gain, and a
 correctness bonus, with essentially no quality risk when done right — is why it sits at

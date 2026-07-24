@@ -87,6 +87,15 @@ sources:
     accessed: "2026-07-03"
     kind: blog
     note: "Distinguishes routing (decides before generation, sends to one model) from cascading (escalates after generation on low confidence). Notes token-probability/entropy confidence, that self-reported confidence is poorly calibrated, and that escalation makes you pay for multiple calls."
+  - id: cost-of-pass
+    title: "Cost-of-Pass: An Economic Framework for Evaluating Language Models"
+    publisher: "arXiv"
+    authors: "Erol, El, Suzgun, Yuksekgonul, Zou"
+    year: 2025
+    url: "https://arxiv.org/abs/2504.13359"
+    accessed: "2026-07-21"
+    kind: paper
+    note: "Evaluates inference-time methods on a cost-per-correct-answer basis: performance-oriented methods with marginal gains — majority voting / self-consistency and self-refinement — rarely justify their added cost; only token-budget-estimation prompting (TALE-EP) showed economic promise."
 ---
 
 ## Overview
@@ -130,13 +139,16 @@ concrete three-tier chain — GPT-J → GPT-3.5-Turbo → GPT-4, with a DistilBE
 
 ### The gate: how you decide accept vs. escalate
 
-The gate is the whole ballgame — a weak gate ships wrong cheap answers, a slow/expensive one
+The gate decides everything — a weak gate ships wrong cheap answers, a slow/expensive one
 eats the savings. Common designs, cheapest-first:
 
 - **Self-consistency / answer agreement.** Sample the cheap model a few times; if the
   samples agree, accept — disagreement is a cheap uncertainty signal. Self-consistency (take
   the majority over multiple sampled reasoning paths) both raises accuracy and yields a usable
-  confidence proxy (+17.9% on GSM8K over greedy decoding).[^self-consistency]
+  confidence proxy (+17.9% on GSM8K over greedy decoding).[^self-consistency] Use it here as a
+  *gate* — the agreement signal is what you are buying. Sampling-and-voting purely to improve
+  the final answer is a different move that rarely pays off: on a cost-per-correct-answer basis,
+  majority voting's accuracy gains typically don't justify their added token cost.[^cost-of-pass]
 - **Token-probability / entropy scoring.** Read the model's own logprobs: probability mass
   concentrated on a few tokens signals confidence; high entropy signals uncertainty. Free to
   compute where logprobs are exposed — but **self-reported confidence is poorly calibrated**,
@@ -227,8 +239,8 @@ no cheap check. A cascade struggles on every axis:
   verifier *plus* the flagship** on nearly every request — strictly worse than calling the
   flagship directly. This is the SimpleQA regime, where cascade savings collapsed to
   **~15%**.[^escalation-worth-it]
-- **Poorly-calibrated confidence is dangerous.** A weak gate on fluent prose is the worst
-  case: the cheap model emits a confident, authoritative-sounding but wrong answer with high
+- **Poorly-calibrated confidence is a real risk.** A weak gate on fluent prose is the hardest
+  case to catch: the cheap model emits a confident, authoritative-sounding but wrong answer with high
   token probabilities, the gate accepts it, and a wrong answer ships.[^tianpan-cascades]
 
 Here a **pre-generation router** (send obviously-hard prompts straight to the flagship, skip
@@ -243,3 +255,4 @@ resolution can be **verified cheaply**.[^escalation-worth-it]
 [^self-consistency]: Wang et al., "Self-Consistency Improves Chain of Thought Reasoning in Language Models," arXiv 2022 (ICLR 2023) — <https://arxiv.org/abs/2203.11171>
 [^portkey-frugalgpt]: Portkey, "Implementing FrugalGPT: Smarter LLM Usage for Lower Costs," 2024 — <https://portkey.ai/blog/implementing-frugalgpt-smarter-llm-usage-for-lower-costs/>
 [^tianpan-cascades]: Tian Pan, "LLM Routing and Model Cascades: How to Cut AI Costs Without Sacrificing Quality," TianPan.co, 2026 — <https://tianpan.co/blog/2025-11-03-llm-routing-model-cascades>
+[^cost-of-pass]: Erol, El, Suzgun, Yuksekgonul, Zou, "Cost-of-Pass: An Economic Framework for Evaluating Language Models," arXiv 2025 — <https://arxiv.org/abs/2504.13359>

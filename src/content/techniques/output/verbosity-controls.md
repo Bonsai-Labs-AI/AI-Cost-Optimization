@@ -24,7 +24,6 @@ status: published
 lastUpdated: "2026-06-29"
 related:
   - "output/output-length-control"
-  - "output/output-length-control"
   - "model-routing/reasoning-token-budgeting"
 sources:
   - id: openai-gpt5-dev
@@ -81,7 +80,7 @@ sources:
 
 On every frontier rate card, **output tokens cost several times more than input** — roughly
 5–6× on the GPT-5.x line (e.g. \$5/M input vs. \$30/M output on GPT-5.5).[^openai-pricing-asymmetry]
-So the single most direct way to cut spend on a read-heavy feature is to make the model's
+So the most direct way to cut spend on a read-heavy feature is to make the model's
 *answer* shorter — without making it worse. **Verbosity controls** are the providers' built-in,
 typed knob for exactly that: a parameter that scales how long and expansive the final answer is,
 left as a first-class API field rather than buried in prompt text.
@@ -112,7 +111,7 @@ This technique is easy to confuse with two neighbours; the distinction is the wh
 - **Output Length Control** is *prompt-side brevity* — "answer in two sentences," bounded list
   lengths, "be concise." It works, but it spends prompt tokens, competes with your other
   instructions, and can be overridden or ignored mid-generation.
-- **Max-Token Policies** is a *hard cap* (`max_tokens`) — a guillotine that truncates the
+- **A hard `max_tokens` cap** truncates the
   completion at N tokens regardless of whether the thought was finished, risking a cut-off answer.
 - **Verbosity controls** are a *typed, model-tuned knob*. The model was post-trained to respond to
   the parameter, so `low` produces a coherently shorter answer (not a truncated one), it consumes

@@ -92,7 +92,8 @@ every turn. Each tool call appends its result — a file read, a web-search dump
 API response — and by default that history is resent, at full input price, on **every
 subsequent step**. Left alone, a multi-step agent's per-turn input cost climbs steadily
 until it either exhausts the context window and fails, or simply becomes expensive because
-most of what it re-encodes each turn is stale.
+most of what it re-encodes each turn is stale. On client agent projects, we now reach for
+the provider's built-in tools before writing any of this ourselves.
 
 The classic fix is to *build* a context pipeline: prune old messages, offload state to a
 store, and summarize history into a rolling digest (the L2 "build" trio —

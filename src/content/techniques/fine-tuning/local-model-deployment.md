@@ -23,7 +23,7 @@ measurementMethods:
 status: published
 lastUpdated: "2026-07-03"
 related:
-  - "fine-tuning/local-open-weight-substitution"
+  - "model-routing/local-open-weight-substitution"
   - "fine-tuning/fine-tuning-cheaper-models"
   - "fine-tuning/calibrated-quantization"
   - "fine-tuning/multi-lora-serving"
@@ -111,18 +111,18 @@ idea**: you take a model you **fine-tuned for one narrow task** and run it yours
 production scale, on GPUs you own or rent — with a real serving stack (vLLM / SGLang),
 continuous batching, quantized weights, and autoscaling behind it.
 
-The cost logic is simple and brutal. An API charges you per token whether your traffic is
+The cost logic is straightforward. An API charges you per token whether your traffic is
 one request or a billion; a GPU costs the same **whether it is 5% busy or 95% busy**. So a
 small fine-tuned model, served at **high, steady utilization**, can undercut *any* API on
 $/token for its narrow task — the marginal token is nearly free once the GPU is paid
 for.[^devtk-breakeven][^lambda-pricing] But that advantage only exists **above a break-even
 volume and at a utilization you can actually sustain**. Below it, you are paying for idle
-silicon and an on-call rotation to beat a bill you could have paid with a credit card.
+silicon and an on-call rotation to beat a bill you could have paid on a managed API.
 
 That is why this is **Level 3**: it is not a config change, it is standing up and running an
 ML-serving function — capacity planning, throughput tuning, reliability, on-call. The gain
-is **High (Very High at true scale)**; the risk is **High**, because the economics collapse
-the moment utilization does. The honest framing for a client is: *do this only when a
+is **High (Very High at true scale)**; the risk is **High**, because the economics fall apart
+the moment utilization drops. The framing we give a client is: *do this only when a
 fine-tuned narrow model is running at very high sustained volume that you can keep the GPUs
 saturated with.* Everything below that, stay on the API (or a managed-open endpoint) and
 revisit `local-open-weight-substitution` and `fine-tuning-cheaper-models` first.
@@ -149,7 +149,7 @@ self-hosting economical comes from a dedicated inference server:
   **maintenance mode**; HF explicitly recommends migrating to **vLLM or SGLang** for new
   deployments.[^tgi-docs]
 
-**Continuous batching is the whole ballgame.** It is what turns one GPU into a machine that
+**Continuous batching is what makes the economics work.** It is what turns one GPU into a machine that
 serves many concurrent requests at once — high utilization is *only* reachable because the
 batch stays full. Layer on **quantized serving** (FP8 / INT8 / INT4 / GPTQ / AWQ, all
 first-class in vLLM) to fit the model on fewer/cheaper GPUs and push throughput further — see
@@ -187,7 +187,7 @@ Two multipliers dominate the real answer:
 2. **Utilization is the denominator.** $/token = (fully-loaded GPU cost) ÷ (tokens actually
    served). At 90% utilization the math above holds; at **30% utilization you serve a third of
    the tokens for the same rent, so your $/token roughly triples** and break-even roughly
-   triples with it. **This one number decides the whole business case** — which is why the
+   triples with it. This one number drives the business case — which is why the
    measurement section leads with it.
 
 The fine-tuning twist that makes this *worth* the effort at L3: you are not serving Llama-70B,

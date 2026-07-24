@@ -99,7 +99,7 @@ decoding step a grammar/schema is used to compute which next tokens are legal, a
 logits of all illegal tokens are set to −∞ (masked out) before sampling. The model can only
 ever pick a token that keeps the output on a valid path through the grammar.[^llamacpp-gbnf][^openai-structured]
 
-The important reframe for 2026: **this is a reliability technique, not a token-savings
+The key point for 2026: **this is a reliability technique, not a token-savings
 technique.** The savings do not come from generating fewer tokens per call — a valid JSON
 object is roughly the same length whether it was constrained or not. The savings come from
 **killing the retry/validate/repair tax**: invalid-output rate goes to ~0%, so the reruns,
@@ -209,7 +209,7 @@ brittle parsing code around them.
 Switching vLLM to `guided_json` with the **XGrammar** backend makes the JSON schema a hard
 constraint. Invalid-output rate drops to **~0%**, so the retry and repair calls **disappear
 entirely** — eliminating those ~80k daily reruns — and the downstream parser's error path
-becomes dead code.[^vllm-structured][^openai-structured] Critically, because XGrammar adds
+becomes dead code.[^vllm-structured][^openai-structured] Because XGrammar adds
 **near-zero decode overhead**, the constrained path runs at essentially the same throughput
 as the unconstrained one — you get the reliability for free.[^xgrammar-paper] The win here is
 the *eliminated retry tax*, not fewer tokens per successful call.

@@ -8,18 +8,18 @@ effort: Low
 gain: High
 riskToQuality: Low
 effortWhy: "The managed batch endpoint is the durable queue, so the work is mostly routing — a code path that sends non-urgent traffic to the cheaper lane."
-gainWhy: "A flat ~50% discount on both input and output tokens on all eligible volume, stackable with caching to ~75% off a shared prefix."
+gainWhy: "A flat ~50% discount on both input and output tokens on all eligible volume, stackable with caching to ~95% off a shared prefix."
 riskWhy: "The model, prompt, and outputs are identical to the synchronous path, so there is essentially no quality risk."
 detectionSignals:
   - "Non-urgent work on sync tier — data enrichment, classification, evals, backfills, scheduled reports, and re-indexing run on the synchronous standard tier."
   - "Bulk jobs at full price — bulk work is throttled by your standard per-model rate limits and runs for hours at full price."
   - "No traffic split — no code path distinguishes 'user is waiting' traffic from 'can finish overnight' traffic; everything hits the real-time endpoint."
-  - "Overpaying for latency — you pay the premium priority or default standard tier where a few hours of latency would be perfectly acceptable."
+  - "Overpaying for latency — you pay the premium priority or default standard tier where a few hours of latency would be acceptable."
 measurementMethods:
   - "Batch coverage — share of eligible (non-interactive) token volume submitted via batch or flex vs. the synchronous standard tier."
   - "Blended $/token — cost on the workload before vs. after moving it to batch (~50% drop on eligible volume)."
   - "Completion-time distribution — batch job turnaround vs. the 24h SLA (confirm it is acceptable for the use case)."
-  - "Stacked effective price — price when batch is combined with prompt caching (target ~75% off the cached prefix)."
+  - "Stacked effective price — price when batch is combined with prompt caching (target ~95% off the cached prefix)."
 status: published
 lastUpdated: "2026-06-29"
 related:
@@ -120,9 +120,10 @@ wait. That is why it sits at **Level 1 (Basic Optimization)**: the effort is low
 is a clean 50% on eligible volume, and there is essentially **no quality risk** — the model,
 prompt, and outputs are identical to the synchronous path.
 
-The discipline this technique demands is mostly *routing*: building a code path that
-recognizes "this work can finish later" and sends it to the cheaper lane instead of the
-real-time endpoint by default.
+The work is mostly *routing*: a code path that recognizes "this can finish later" and
+sends it to the cheaper lane instead of the real-time endpoint by default. In our client
+work, non-urgent traffic still running at full synchronous price is one of the first
+things we look for.
 
 ## Detailed Approach & Techniques
 
@@ -185,12 +186,12 @@ the opposite** — you pay *more* for tighter latency. Match the tier to the wor
 for anything that can wait, standard for interactive, and priority only where a few hundred
 milliseconds of tail latency genuinely costs you a user.
 
-### Stacking batch with prompt caching (~75% off)
+### Stacking batch with prompt caching (~95% off a shared prefix)
 
 The batch discount and the prompt-caching discount are **independent and multiplicative**.
-On a provider where caching already gives 50% off a repeated prefix, applying it inside a
-batch that is itself 50% off yields **~75% off** the cached portion (0.5 × 0.5 = 0.25 of
-the original price).[^anthropic-pricing] This is the single best move for a bulk job over a
+On the current major providers caching gives **~90% off** a repeated prefix (cache reads bill
+at 0.1× the input rate), so applying it inside a batch that is itself 50% off yields **~95%
+off** the cached portion (0.5 × 0.1 = 0.05 of the original price).[^anthropic-pricing] This is the best move for a bulk job over a
 **shared prefix** — e.g. classifying 200k documents that all share the same long
 instruction + schema block.
 
@@ -213,7 +214,7 @@ morning — **nobody is waiting on any individual call**.
   **separate rate-limit pool**, finishing comfortably inside the 24h window.[^openai-batch]
 - Because all 300k requests share the **same instruction + JSON-schema prefix**, adding
   prompt caching with a **1-hour TTL** stacks on top, pushing the cached-prefix portion to
-  roughly **75% off**.[^anthropic-batch][^anthropic-pricing]
+  roughly **95% off**.[^anthropic-batch][^anthropic-pricing]
 
 The net effect is a halving (or better) of the enrichment bill for one routing change and a
 caching flag — no model downgrade, no quality regression.

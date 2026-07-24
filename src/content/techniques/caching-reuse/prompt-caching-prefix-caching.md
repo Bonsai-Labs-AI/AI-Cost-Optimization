@@ -20,7 +20,7 @@ measurementMethods:
 status: published
 lastUpdated: "2026-07-03"
 related:
-  - "prompt-context/static-dynamic-prompt-separation"
+  - "prompt-context/prompt-modularization"
   - "caching-reuse/cache-aware-agent-design"
   - "caching-reuse/exact-response-caching"
   - "caching-reuse/semantic-caching"
@@ -110,8 +110,8 @@ Every LLM request re-processes its **entire input** before generating a single o
 token. In most production apps a large fraction of that input is *identical from one
 request to the next*: the system prompt, the tool/function definitions, a long set of
 few-shot examples, a retrieved document, or the accumulated history of a conversation.
-Without caching, you pay full input price to re-encode that unchanged prefix on **every
-single call**.
+Without caching, you pay full input price to re-encode that unchanged prefix on every
+call.
 
 Prompt caching (also called *prefix caching* or *context caching*) stores the model's
 internal representation (the attention **KV cache**) of a prompt prefix after the first
@@ -119,12 +119,12 @@ request, and reuses it on subsequent requests that begin with the same tokens. T
 shared prefix is then billed at a steep discount — or skipped entirely on self-hosted
 stacks — and time-to-first-token drops because the prefill work is already done.[^anthropic-pc][^openai-pc-announce]
 
-This is one of the highest-leverage, lowest-risk optimizations available: on the major
-providers it is **near-zero engineering effort**, it does **not change model outputs**
-(the same tokens are processed; only billing and latency change), and the savings on a
-cache hit are large — **~90% off input on OpenAI (GPT-5.x), Anthropic, and Gemini 2.5+**.[^openai-pricing][^anthropic-pc][^gemini-caching]
+On the major providers this is **near-zero engineering effort**, it does **not change
+model outputs** (the same tokens are processed; only billing and latency change), and the
+savings on a cache hit are large — **~90% off input on OpenAI (GPT-5.x), Anthropic, and Gemini 2.5+**.[^openai-pricing][^anthropic-pc][^gemini-caching]
 That combination is why it sits at **Level 1 (Basic Optimization)**: almost every product
-with a stable prompt prefix should be doing it.
+with a stable prompt prefix should be doing it. In our client work, cache hit rate is
+usually the first number we ask for.
 
 ## Detailed Approach & Techniques
 
@@ -132,18 +132,18 @@ with a stable prompt prefix should be doing it.
 
 Caching only works on a **contiguous prefix** measured from the start of the prompt. The
 moment the token stream diverges from the cached version, the cache stops applying and
-everything after the divergence point is recomputed at full price. The single most
-important design rule follows directly:
+everything after the divergence point is recomputed at full price. The main design rule
+follows directly:
 
 > **Put static content first, volatile content last.**
 > Order the prompt as: system instructions → tool definitions → long shared context /
 > documents → few-shot examples → *then* the per-request user input.[^openai-pc-docs]
 
-Putting a timestamp, a user name, or a request ID near the top of the prompt silently
-destroys the cache for everything below it.
+Putting a timestamp, a user name, or a request ID near the top of the prompt breaks the
+cache for everything below it.
 
-The payoff is concrete. Security-tooling company **ProjectDiscovery** ran its agent "Neo"
-(a **20,000-token** system prompt, 20–40+ LLM steps per task) at a dismal **7% cache hit
+Security-tooling company **ProjectDiscovery** ran its agent "Neo"
+(a **20,000-token** system prompt, 20–40+ LLM steps per task) at a **7% cache hit
 rate** because dynamic working memory lived *inside* the system prompt and invalidated the
 prefix on nearly every step. Relocating that volatile content to a **trailing user
 message** — a pure static-first / volatile-last reordering, no logic change — raised the
@@ -183,7 +183,7 @@ hit rate to **84%** and cut overall LLM cost by **~59%**.[^projectdiscovery-pc]
 ### Maximizing hit rate
 
 1. **Separate the static and dynamic prompt** so the static block is byte-for-byte
-   identical every call (see *Static / Dynamic Prompt Separation*). Even whitespace or JSON
+   identical every call (see *Prompt Modularization*). Even whitespace or JSON
    key-order changes break the prefix match.
 2. **Cache the expensive, reused blocks**: tool definitions, system prompt, RAG documents,
    and long few-shot sets are the prime candidates.
@@ -204,7 +204,7 @@ averaging 4 turns. The static block is identical on every turn of every conversa
 - **With caching (Anthropic):** the prefix is paid at full price once per cache window and
   then at **0.1×** on subsequent reads — a **~90% reduction on the prefix portion** of input
   cost, plus a noticeable **TTFT improvement** because prefill is skipped.[^anthropic-pc]
-  Since the prefix dominates input tokens here, blended input spend drops dramatically with
+  Since the prefix dominates input tokens here, blended input spend drops sharply with
   one line of `cache_control` configuration.
 
 Agentic loops are an even stronger fit: the system prompt **and** the full tool schema

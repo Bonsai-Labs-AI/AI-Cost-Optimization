@@ -298,8 +298,8 @@ Two operations dominate maintenance. **Backfill** populates the store when you a
 pre-generated field or change the prompt or model — a one-shot mass batch over the whole corpus.
 **Refresh** keeps items current: schedule-based (re-run the digest every night), event-based
 (re-summarize on edit), or bounded-staleness (TTL, then re-enqueue). Getting the refresh
-granularity right is the crux — too coarse and you serve stale content; too fine and you have
-recreated per-request generation with extra steps.
+granularity right is the hard part — too coarse and you serve stale content; too fine and you
+have recreated per-request generation with extra steps.
 
 ---
 
@@ -354,8 +354,8 @@ pages are viewed tens of millions of times per day.
   pool, and results are written to a DB column + vector index.[^celery-docs] Page views become
   instant key-value lookups.
 
-The reads-per-generation ratio is enormous (millions of reads per description, one generation
-per edit), so the effective per-view cost collapses toward zero, and the batch discount plus
+The reads-per-generation ratio is very high (millions of reads per description, one generation
+per edit), so the effective per-view cost drops close to zero, and the batch discount plus
 high offline utilization cuts the remaining generation spend several-fold versus the same work
 done live.[^spheron-batch][^anthropic-batch]
 

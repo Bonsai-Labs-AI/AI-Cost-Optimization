@@ -99,7 +99,8 @@ staples them into the generation prompt. Because a single-vector (bi-encoder) si
 score is a coarse relevance signal, teams compensate by making **k large "to be safe"** —
 10, 15, 20 chunks — so the passage that actually answers the question is *somewhere* in
 the pile. Every one of those chunks is then billed as **LLM input tokens on every query**,
-and most of them are noise the model has to read past.
+and most of them are noise the model has to read past. Adding a reranker so a client could
+safely cut that k is one of the more common RAG fixes we ship.
 
 Reranking breaks the pipeline into two stages with very different unit economics. Stage
 one **over-retrieves** a wide candidate set cheaply (e.g. 50–100 chunks from a vector or

@@ -149,8 +149,9 @@ A large share of "AI" in production is neither open-ended generation nor creativ
 it is a **bounded NLP task**: assigning one label from a fixed set, routing a request to the
 right queue, or pulling a specific set of fields out of a document. When a frontier LLM handles
 these tasks, you pay **per-token generation prices and hundreds of milliseconds of network
-round-trips** to produce a one-word answer or a short JSON record — on every request, at scale,
-forever.
+round-trips** to produce a one-word answer or a short JSON record — on every request. In our
+client work, a high-volume classifier or extractor still running on a frontier model is one of
+the first line items we look for.
 
 **Task-specific lightweight models** replace those LLM calls with a **small model trained once
 on your data**: either a fine-tuned encoder (BERT / DeBERTa / ModernBERT with a classification
@@ -162,7 +163,7 @@ single-digit-millisecond to low-hundred-millisecond inference on modest hardware
 API bill — and on narrow fixed-schema tasks, they can *match or beat* frontier LLMs on
 accuracy.
 
-The economics are stark across both the classification and extraction variants:
+The cost gap is large across both the classification and extraction variants:
 
 - **Classification.** A 2026 production study found DistilBERT cost **\$12.44 per 1M
   classification requests** on IMDB sentiment versus **\$842.78 for GPT-4o** and **\$1,174.95
@@ -178,7 +179,7 @@ The economics are stark across both the classification and extraction variants:
 This technique sits at **Level 3** because it is real engineering investment: you need labeled
 data, a training pipeline, a per-field or per-class evaluation harness, a serving path, and a
 retraining cadence. But for a narrow, high-volume, stable workload, the ROI is among the largest
-in the entire catalog — the recurring LLM cost approaches zero when replaced by a model you own.
+in the catalog — the recurring LLM cost drops close to zero when you replace it with a model you own.
 
 ## Detailed Approach & Techniques
 
@@ -189,8 +190,8 @@ label set or a field schema), **high volume**, and is **stable over time**. All 
 point the same way. High volume means the one-time training cost is amortized quickly. Fixed
 output schema means a narrow model can reach or exceed LLM accuracy without needing open-ended
 reasoning. Stability means retraining is infrequent. Add latency sensitivity — a classifier or
-extractor runs orders of magnitude faster than an LLM call — and the specialist wins on every
-dimension simultaneously.[^costaware-encoders]
+extractor runs orders of magnitude faster than an LLM call — and the specialist wins on cost,
+latency, and often accuracy at once.[^costaware-encoders]
 
 The latency gap is concrete: on SST-2 sentiment, DistilBERT ran at **98 ms p50 / 124 ms p95**
 versus GPT-4o at **377 / 591 ms** and Claude 4.5 at **1,394 / 2,048 ms** — a one-to-two

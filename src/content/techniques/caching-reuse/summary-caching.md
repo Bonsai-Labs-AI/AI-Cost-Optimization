@@ -84,7 +84,7 @@ sources:
 
 ## Overview
 
-A large share of AI spend is paying, over and over, to shovel the *same long text*
+A large share of AI spend is paying, over and over, to send the *same long text*
 through the model: a 40-page contract re-sent on every question a user asks about it, a
 knowledge-base article re-attached to hundreds of support queries, or a conversation
 history re-sent verbatim on every turn so its tokens are billed again each round-trip.
@@ -102,12 +102,12 @@ and then reuse the compressed representation across many calls. Two shapes domin
   periodically collapsed into a running summary so each new turn carries a compact digest
   rather than the full transcript.[^anthropic-context-engineering][^anthropic-compaction]
 
-The reason this is **Level 2** and not a trivial cache is that doing it *correctly*
-requires real engineering: deciding **when the reuse count justifies the summarization
+This is **Level 2** and not a trivial cache because doing it correctly
+takes real work: deciding **when the reuse count justifies the summarization
 cost** (the break-even), **invalidating** the cached summary when the underlying content
 changes, and **managing the quality risk** that a summary drops a detail that later turns
-out to matter. A summary is lossy by construction[^anthropic-context-engineering] — which
-is exactly why it saves tokens, and exactly why it can be dangerous.
+out to matter. A summary is lossy by construction[^anthropic-context-engineering] — that
+is why it saves tokens, and why it carries quality risk.
 
 ## Detailed Approach & Techniques
 
@@ -132,7 +132,7 @@ volatile, or touched once.
 
 ### DIY summary cache vs. provider-native compaction
 
-There are two ways to build this, and the honest framing is **build vs. buy**.
+There are two ways to get this, and the choice is **build vs. buy**.
 
 **DIY (the "build" path).** Roll your own cache: summarize the content, store the summary
 keyed by a **content hash** of the source (content-addressable storage), and look it up on
@@ -169,7 +169,7 @@ The content-hash key makes this clean: if the source text changes, its hash chan
 old key misses, and a fresh summary is produced.[^n1n-rag-caching] For the conversation
 shape, staleness is handled for you — compaction always summarizes the *current* history
 up to the threshold.[^anthropic-compaction] Skipping invalidation is the classic caching
-failure mode: serving a confident summary of a document that has since been superseded.
+failure mode: serving a summary of a document that has since been superseded.
 
 ### Managing the quality risk
 
@@ -214,7 +214,7 @@ requests.
   answer, with no later reuse to amortize against. The break-even is never reached.
 - **Volatile sources.** Content that changes constantly (a live dashboard, an actively
   edited draft) invalidates its summary almost as fast as you can compute it, so the cache
-  churns and the hit rate collapses.[^n1n-rag-caching]
+  churns and the hit rate stays low.[^n1n-rag-caching]
 - **Already-cheap context.** If the reused content is short, or is already covered by
   prompt/prefix caching at 0.1× input,[^anthropic-pricing] the extra machinery of a summary
   cache buys little over just caching the verbatim prefix — and avoids the quality risk

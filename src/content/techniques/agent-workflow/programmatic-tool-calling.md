@@ -94,12 +94,12 @@ aggregates the intermediate results *in the sandbox*, and returns **only the fin
 small output** to the model's context. The 200 KB of raw expense line items never enter
 the window; the two-line "these 3 employees exceeded their limit" does.[^anthropic-ptc-docs]
 
-The headline number is the point: in Anthropic's canonical example (pull a meeting
+The numbers are large: in Anthropic's example (pull a meeting
 transcript from Google Drive, attach it to Salesforce), loading all tool definitions plus
 routing intermediate results through context cost **~150,000 tokens**; the code-execution
 approach cut that to **~2,000 tokens — a 98.7% reduction**.[^anthropic-cewmcp] Because
 intermediate-result tokens are frequently the *dominant* line item in an agent's bill,
-this is one of the highest-leverage cost levers available — but it sits at **Level 3**
+this is one of the higher-leverage cost levers available — but it sits at **Level 3**
 because it demands a real code-execution runtime and a model good enough to write correct
 orchestration code, and it is incompatible with several standard tool-use controls.
 
@@ -128,7 +128,7 @@ The lifecycle is: (1) Claude writes Python that invokes the tool as an async fun
 **pauses** and the API returns a `tool_use` block for your app to fulfil; (4) you return
 the result and execution **continues** — *these intermediate results are not loaded into
 Claude's context*; (5) once the code finishes, Claude receives only the final output and
-continues the task.[^anthropic-ptc-docs] Critically for billing, **tool results from
+continues the task.[^anthropic-ptc-docs] For billing, **tool results from
 programmatic invocations do not count toward your input/output token usage** — only the
 final code output and Claude's response do.[^anthropic-ptc-docs]
 

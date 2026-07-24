@@ -140,13 +140,13 @@ A public benchmark makes the utilization sensitivity vivid: Llama 3.3 70B on an 
 via vLLM lands around **$2.30 per 1M tokens at batch size 256** (~2,800 tok/s), but the
 *same hardware* costs **~$258 per 1M tokens at batch size 1** (~5% GPU utilization) — a
 roughly **100× swing** driven purely by how full you keep the GPU.[^spheron-cpt] An idle or
-half-full fleet does not "cost a bit more"; it **destroys** the case: a GPU at 10% load
-inflates per-token cost ~10×.[^braincuber-breakeven]
+half-full fleet does not cost a bit more; it removes the whole case for self-hosting: a GPU
+at 10% load inflates per-token cost ~10×.[^braincuber-breakeven]
 
 Rolling that up, a representative analysis puts the crossover near **~11 billion tokens per
 month (~500M/day), roughly $4,200/month of equivalent API spend**, below which the API is
 cheaper.[^braincuber-breakeven] Treat that as an order-of-magnitude marker, not a constant —
-it moves with your task, the model size, GPU rental rates, and (critically) the API price
+it moves with your task, the model size, GPU rental rates, and the API price
 you are comparing against.
 
 ### What you actually take on
@@ -156,7 +156,7 @@ Self-hosting is not "swap a base URL." You inherit:
 - **A serving stack** — vLLM, SGLang, or TGI — with tensor/pipeline parallelism, KV-cache
   and prefix-cache config, quantization, and throughput tuning.[^vllm-docs][^sglang-docs]
 - **Autoscaling and utilization management** — the hardest operational problem, because
-  idle GPUs are the economics killer. You need traffic steady enough (or a scale-to-zero /
+  idle GPUs are what breaks the economics. You need traffic steady enough (or a scale-to-zero /
   bursting design good enough) to hold high average utilization.[^spheron-cpt][^braincuber-breakeven]
 - **An eval harness** — to prove the open model holds quality vs. the frontier baseline on
   *your* task, and to catch regressions when you upgrade models or quantization.
@@ -167,7 +167,7 @@ Self-hosting is not "swap a base URL." You inherit:
   open-ended reasoning; substitution works when the task is narrow enough that a right-sized
   model suffices (pairs with *Model Right-Sizing* and *Fine-Tuning Cheaper Models*).
 
-### The honest middle path: open-weight *via* managed API first
+### The middle path: open-weight *via* managed API first
 
 Before renting a single GPU, capture most of the savings with **none of the ops** by
 serving the open-weight model through a managed inference provider. The small-model price

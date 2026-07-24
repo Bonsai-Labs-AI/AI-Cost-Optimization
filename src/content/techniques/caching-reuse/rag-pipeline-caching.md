@@ -169,11 +169,12 @@ every request, even when an identical or near-identical question came in seconds
    freshly generated from (potentially stale) retrieved context.[^tds-agentic-rag-cache]
 
 Both layers save **retrieval compute, not the LLM call**, so the absolute dollar value is
-modest unless retrieval is a real cost or latency line — most often when a fat reranker or
-very high query volume over a stable-ish corpus is involved. This is also what puts the
+modest unless retrieval is a real cost or latency line — most often when a heavy reranker or
+very high query volume over a stable-ish corpus is involved. When we pick this up on an
+engagement, the reranker bill is usually what makes it worth the effort. This is also what puts the
 technique at **Level 2**: the caching itself is straightforward, but correctness requires
 deliberate cache-key design, model-version invalidation, and, for Layer 2, corpus-change
-invalidation. The failure mode is real: standard RAG already serves superseded facts
+invalidation. Standard RAG already serves superseded facts
 **15–40%** of the time on evolving knowledge, and a poorly-invalidated retrieval cache
 amplifies that rate.[^memstrata-temporal]
 
@@ -260,7 +261,7 @@ changes, those cached chunk IDs go stale. Two invalidation families, usually com
   returned it. Cleaner correctness, but requires wiring a change signal (a webhook, a CDC
   stream, or an index-version bump) into the cache.[^apxml-rag-caching]
 
-Robust deployments layer additional guards: **namespace the key** by corpus version so a
+Production deployments layer additional guards: **namespace the key** by corpus version so a
 re-index invalidates everything at once; **validate on read** by comparing stored document
 version/timestamps or SHA-256 content fingerprints against the live source and discarding
 on mismatch; **bypass the cache for temporal queries** ("latest", "current", "today") that
@@ -285,7 +286,7 @@ on the query embedding) plus event-based invalidation wired to the docs-ingestio
 (a re-index bumps the corpus version and purges affected sets), roughly **30–40%** of
 retrieval requests hit the cache.[^tds-agentic-rag-cache] Every hit skips a query
 embedding, an ANN search, and — the big one — a 60-document rerank "search".[^cohere-pricing][^cohere-rerank]
-Retrieval latency on those requests collapses to a cache lookup, and the LLM still generates
+Retrieval latency on those requests drops to a cache lookup, and the LLM still generates
 a fresh answer from the cached chunks, so quality is unchanged. Because the corpus is
 versioned and purged on update, multi-day staleness is avoided.
 

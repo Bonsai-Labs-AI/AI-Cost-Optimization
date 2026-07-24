@@ -22,8 +22,6 @@ lastUpdated: "2026-07-03"
 related:
   - "caching-reuse/exact-response-caching"
   - "caching-reuse/cache-invalidation-strategies"
-  - "caching-reuse/cache-hit-rate-instrumentation"
-  - "caching-reuse/rag-pipeline-caching"
   - "caching-reuse/rag-pipeline-caching"
 sources:
   - id: gptcache-repo
@@ -110,13 +108,13 @@ the model.[^gptcache-repo][^redis-semantic] A hit costs one embedding call plus 
 cost and seconds of latency on every hit**.[^redis-semantic] Because it matches *meaning* rather
 than exact bytes, its hit rate on paraphrase-heavy traffic is far higher than an exact cache's.
 
-The catch is what makes it **Level 3** rather than a config toggle: the matching is *fuzzy*, so a
-too-loose threshold serves a **confidently wrong answer** — a similar-but-not-equivalent question
-gets someone else's response. This false-hit risk is the defining engineering problem of the
-technique, and getting it right (threshold tuning, invalidation, false-hit monitoring, an embedding
-model that separates your intents) is real work. It is the fuzzy sibling of *exact-response caching*
-(L1), and it pays off on the same signal — high repeated-intent traffic — but one tier up in both
-gain and risk.
+The catch is what puts it at **Level 3** rather than a config toggle: the matching is *fuzzy*, so a
+too-loose threshold serves a **wrong answer** — a similar-but-not-equivalent question
+gets someone else's response. False hits are the main engineering problem, and getting the
+threshold, invalidation, false-hit monitoring, and embedding model right is real work. In our
+client work, the false-hit rate is the number we watch most closely here. It is the fuzzy sibling
+of *exact-response caching* (L1), and it pays off on the same signal — high repeated-intent
+traffic — but one tier up in both gain and risk.
 
 ## Detailed Approach & Techniques
 
@@ -155,12 +153,12 @@ guidance is to **start at 0.90–0.95, monitor the false-positive rate, and if i
 fix is a better (domain-specific) embedding model, not just a looser number** — a general-purpose
 embedder that can't separate your intents can't be rescued by threshold alone.[^redis-semantic]
 
-Crucially, the threshold does **not** trade linearly. On AWS's 63,796-query benchmark, moving the
+The threshold does **not** trade linearly. On AWS's 63,796-query benchmark, moving the
 threshold from a strict **0.99 to a permissive 0.75** changed answer accuracy by only **~0.9
 percentage points** (92.1% → 91.2%) while lifting cost savings from **15.8% to 86.3%** — roughly
 **70 points of extra savings for under a point of accuracy**.[^aws-elasticache-semantic] That is why
 tuning against a *real* query distribution (with a held-out false-hit eval) beats guessing: the
-efficient operating point is often far looser than intuition suggests, but only your data proves it.
+efficient operating point is often far looser than you would guess.
 
 ### Quantifying hit rate and savings
 
@@ -180,7 +178,7 @@ traffic is.
 
 ### Invalidation — keeping a fuzzy cache correct
 
-A semantic cache without invalidation is a wrong-answer generator: it will happily serve last
+A semantic cache without invalidation is a wrong-answer generator: it will serve last
 month's pricing to this month's paraphrase. Bound staleness with **TTLs sized to data volatility**
 (minutes for prices/inventory, hours for descriptions, ~a day for stable FAQs/policies) plus
 **content-triggered purges** (when the source doc changes, flush the related entries rather than
@@ -215,7 +213,7 @@ loose-but-safe threshold, **~85%+ cost and latency reductions on the cached frac
 answer accuracy above **~91%**.[^aws-elasticache-semantic] Every hit turns a multi-second, full-price
 generation into a **~20 ms, ~free** vector lookup.[^redis-semantic] Because the answers are
 FAQ-style and identical for everyone, the false-hit risk is low, and a **24-hour TTL** with a purge
-on help-center edits keeps them fresh.[^redis-semantic] This is the archetypal fit: **high repeated
+on help-center edits keeps them fresh.[^redis-semantic] This is the textbook fit: **high repeated
 intent, shared (non-personalized) answers, tolerant of a small false-hit rate.**
 
 ## Example Where It Would NOT Work
@@ -223,7 +221,7 @@ intent, shared (non-personalized) answers, tolerant of a small false-hit rate.**
 A **personal-finance assistant** answers questions like "What's my current balance?", "How much did I
 spend on travel last month?", and "Am I on track for my savings goal?" Two users — or the same user a
 day later — can phrase these **almost identically**, so their query embeddings are nearly identical
-and sit **well above any reasonable similarity threshold**. A semantic cache would happily serve **one
+and sit **well above any reasonable similarity threshold**. A semantic cache would serve **one
 user's balance to another**, or a stale figure to the same user, because the *questions* are
 semantically equivalent even though the *correct answers* are completely different and
 per-user.[^redis-semantic] Here the whole premise — "similar question ⇒ reusable answer" — is false.

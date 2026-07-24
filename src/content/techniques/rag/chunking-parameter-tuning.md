@@ -100,7 +100,8 @@ LlamaIndex's `SentenceSplitter`, for example, defaults to **1,024-token chunks w
 tutorial and never revisit it.[^llama-nodeparsers][^firecrawl-chunking] Oversized chunks
 pad the prompt with mostly-irrelevant text (you pay for the whole chunk to get the two
 relevant sentences inside it); large overlap duplicates tokens across neighbouring chunks,
-inflating both the index and the retrieved-token count.
+inflating both the index and the retrieved-token count. On most client pipelines we find
+the chunk config is still whatever the tutorial shipped with.
 
 Chunking-parameter tuning is the practice of choosing chunk **size**, **overlap**, and
 **boundary strategy** (fixed / recursive / semantic) deliberately, so retrieval returns

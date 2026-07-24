@@ -151,14 +151,23 @@ sources:
     accessed: "2026-07-02"
     kind: blog
     note: "Unsuccessful requests still count against the per-minute rate limit; honor Retry-After; cap total retries; backoff+jitter is necessary but insufficient — prefer gateway pooling + automatic provider fallback to absorb load rather than retry it."
+  - id: masood-gateway
+    title: "Building the AI Control Plane — A Primer on AI Gateways (LLM Proxies / Routers)"
+    publisher: "Adnan Masood"
+    authors: "Adnan Masood"
+    year: 2026
+    url: "https://medium.com/@adnanmasood/primer-on-ai-gateways-llm-proxies-routers-definition-usage-and-purpose-9b714d544f8c"
+    accessed: "2026-07-21"
+    kind: blog
+    note: "Frames the LLM gateway as an 'AI control plane' that makes LLM calls reliable, auditable, cost-controlled, and provider-agnostic — via virtual keys and token/cost tracking. Recommended adoption order: start with visibility + key management, then add cost controls + routing/fallbacks."
 ---
 
 ## Overview
 
 The same model does not cost the same everywhere, and no single provider is available
-100% of the time. These two facts define a single strategy that belongs together in
-production: **route to the cheapest quality-equivalent host** for every request, and
-**fall back automatically** when that host rate-limits, errors, or goes dark.
+100% of the time. Those two facts make this one strategy, not two: **route to the
+cheapest quality-equivalent host** for every request, and **fall back automatically**
+when that host rate-limits, errors, or goes down.
 
 **Provider routing** treats a model tier — say, "a fast mid-size model for classification"
 — as an abstract capability and lets a gateway pick the cheapest host that serves it. The
@@ -181,14 +190,15 @@ exceptions, not the base load.
 The two primitives live on the same infrastructure — gateways like LiteLLM, Portkey, and
 OpenRouter expose both in the same configuration object — and they compose: the primary
 slot in a fallback chain *is* the cheapest host the provider router selected, and the
-fallback slots are the next-cheapest vetted alternatives. Separating them is a conceptual
-convenience; deploying them together is how production AI systems actually run.
+fallback slots are the next-cheapest vetted alternatives. They are separate ideas on
+paper; in production they deploy together.
 
 Both sit at **Level 2** because each is a config-level change with a gotcha that requires
 deliberate engineering: provider routing has a quality-parity risk ("same model" is not
 always "same behavior" across hosts), and fallback routing has a cost-amplification risk
-(uncapped retries on expensive backups turn a reliability feature into a runaway
-bill).[^openrouter-lowcost][^maxim-429]
+(uncapped retries on expensive backups turn a reliability feature into a much larger
+bill).[^openrouter-lowcost][^maxim-429] We reach for the gateway approach on almost every
+engagement where a client is on a single provider.
 
 ## Detailed Approach & Techniques
 
@@ -222,6 +232,29 @@ multiple providers behind a single API and handles selection per request:
   can itself be a load-balancer). The retry layer defaults to status codes
   **[429, 500, 502, 503, 504, 529]**, up to **5 attempts**, with exponential backoff
   (**1s → 2s → 4s → 8s → 16s**).[^portkey-fallbacks][^portkey-retries]
+
+### The gateway as a cost control plane
+
+The same gateway that shops for the cheapest host is also the natural place to *govern* AI spend
+across an organization. Framed as an **"AI control plane,"** its job is to turn scattered raw LLM
+calls into a managed capability that is "reliable, auditable, cost-controlled, and
+provider-agnostic."[^masood-gateway] The cost-governance levers it centralizes:
+
+- **Virtual / per-team keys.** Issue scoped virtual keys per team, feature, or customer instead of
+  sharing one raw provider key, so every call is attributable to a cost owner.[^masood-gateway]
+- **Per-key budgets and rate limits.** Attach hard spend caps and rate limits to each virtual key,
+  so a runaway job or one team trips *its own* budget rather than the org invoice (this is where
+  provider/fallback routing meets *Agent Budget Guardrails*).
+- **Org-wide token/cost tracking and attribution.** One metering layer that reports tokens and cost
+  by key, model, and route — the visibility a FinOps function needs to manage AI spend at
+  all.[^masood-gateway]
+- **Centralized model-downgrade policy.** Enforce a cheaper-model default, a fallback order, or a
+  cost/quality policy from a single config instead of re-implementing it in every service.
+
+The recommended adoption order makes the dependency explicit: **start with visibility + key
+management, then layer on cost controls + routing/fallbacks.**[^masood-gateway] The routing and
+fallback behavior above is what the control plane *does*; virtual keys, budgets, and attribution
+are how you keep it accountable at organization scale.
 
 ### The two price-dispersion opportunities
 
@@ -288,13 +321,13 @@ same vetted set.
 Fallback and retry share the same underlying primitive, and the failure mode is a **retry
 storm**: uncapped, un-backoffed retries replay a large request — often escalating to a
 more expensive model — on every transient blip. Because unsuccessful requests still consume
-rate-limit quota, naive retries can *manufacture* the very `429`s they are reacting to,
-turning one hiccup into a self-amplifying cascade against a pricier backup.[^maxim-429]
+rate-limit quota, naive retries can *cause* the very `429`s they are reacting to,
+turning one blip into a growing wave of retries against a pricier backup.[^maxim-429]
 Guardrails that keep this cheap:
 
 - **Cap total retries** and use **exponential backoff with jitter** (Portkey's 1→16s
   schedule; the `tenacity` `wait_random_exponential(max=60)` pattern) so a spike doesn't
-  become a thundering herd.[^portkey-retries][^gcp-429]
+  pile more load onto a host that is already struggling.[^portkey-retries][^gcp-429]
 - **Honor `Retry-After`** — that value reflects the real reset window; retrying sooner
   just burns quota.[^maxim-429]
 - **Only fall back on retryable errors** (`429` / `5xx` / timeout). A `400` is a malformed
@@ -374,3 +407,4 @@ run.
 [^together-pricing]: AI Pricing Guru, "Together.ai API Pricing 2026 — All Models, Live Rates" — <https://www.aipricing.guru/together-pricing/>
 [^gcp-429]: Google Cloud Blog, "Learn how to handle 429 resource exhaustion errors in your LLMs" — <https://cloud.google.com/blog/products/ai-machine-learning/learn-how-to-handle-429-resource-exhaustion-errors-in-your-llms>
 [^maxim-429]: Maxim AI, "Handle 429 Errors in Production LLM Applications" — <https://www.getmaxim.ai/articles/handle-429-errors-in-production-llm-applications/>
+[^masood-gateway]: Adnan Masood, "Building the AI Control Plane — A Primer on AI Gateways (LLM Proxies / Routers)," 2026 — <https://medium.com/@adnanmasood/primer-on-ai-gateways-llm-proxies-routers-definition-usage-and-purpose-9b714d544f8c>
