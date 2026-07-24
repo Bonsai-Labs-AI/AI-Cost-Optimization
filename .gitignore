@@ -5,3 +5,6 @@ dist/
 *.log
 .env
 .env.*
+# StatiCrypt writes this when run without --config false; the encrypt step
+# passes an explicit salt so it's never needed. Never commit it.
+.staticrypt.json

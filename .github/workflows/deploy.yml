@@ -24,11 +24,43 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Build Astro site
-        # Official Astro action: installs deps, runs `astro build`, uploads the
-        # Pages artifact. GITHUB_ACTIONS=true is set by the runner, so the
-        # config's project-subpath `base` is applied automatically.
-        uses: withastro/action@v3
+        # GITHUB_ACTIONS=true is set by the runner, so astro.config.mjs applies
+        # the project-subpath `base` (/AI-Cost-Optimization) automatically.
+        run: npm run build
+
+      - name: Require site password secret
+        # Fail fast with a clear message instead of letting StatiCrypt hang
+        # waiting for a password prompt when the secret is missing/empty.
+        env:
+          STATICRYPT_PASSWORD: ${{ secrets.SITE_PASSWORD }}
+        run: |
+          if [ -z "$STATICRYPT_PASSWORD" ]; then
+            echo "::error::SITE_PASSWORD secret is not set. Add it in repo Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+      - name: Password-protect all pages (StatiCrypt)
+        # Encrypts every built HTML page in place (assets left untouched) behind
+        # one shared password. StatiCrypt reads the password from STATICRYPT_PASSWORD.
+        env:
+          STATICRYPT_PASSWORD: ${{ secrets.SITE_PASSWORD }}
+        run: npm run protect
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
 
   deploy:
     needs: build

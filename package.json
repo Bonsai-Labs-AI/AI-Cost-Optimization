@@ -11,9 +11,13 @@
     "preview": "astro preview",
     "astro": "astro",
     "gen:stubs": "node scripts/generate-stubs.mjs",
-    "check": "astro check"
+    "check": "astro check",
+    "protect": "staticrypt dist -r -d . --config false --salt a3f1c09e8b7d4652fa10cd39e6b28470 --short --template-title \"Bonsai Labs — Research Access\" --template-instructions \"This research is shared under access control. Enter the password included with your invitation to continue.\" --template-button \"View research\" --template-color-primary \"#2f6f4f\" --template-color-secondary \"#1f2937\""
   },
   "dependencies": {
     "astro": "^5.6.1"
+  },
+  "devDependencies": {
+    "staticrypt": "^3.5.4"
   }
 }
