@@ -30,14 +30,30 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            Agentic-Coding-Token-Optimization/package-lock.json
 
-      - name: Install dependencies
+      - name: Install dependencies (Part 1)
         run: npm ci
 
-      - name: Build Astro site
+      - name: Build Part 1 — Cost Optimization for AI Products
         # GITHUB_ACTIONS=true is set by the runner, so astro.config.mjs applies
         # the project-subpath `base` (/AI-Cost-Optimization) automatically.
         run: npm run build
+
+      - name: Install dependencies (Part 2)
+        working-directory: Agentic-Coding-Token-Optimization
+        run: npm ci
+
+      - name: Build Part 2 — Token Cost Optimization for Agentic Coding
+        # Its astro.config.mjs applies base /AI-Cost-Optimization/agentic-coding in CI,
+        # matching the subdirectory it's merged into below.
+        working-directory: Agentic-Coding-Token-Optimization
+        run: npm run build
+
+      - name: Merge Part 2 into the Pages artifact as a subpage
+        run: cp -r Agentic-Coding-Token-Optimization/dist dist/agentic-coding
 
       - name: Require site password secret
         # Fail fast with a clear message instead of letting StatiCrypt hang

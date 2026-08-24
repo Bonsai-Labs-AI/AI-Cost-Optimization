@@ -1,0 +1,25 @@
+---
+import Badge from './Badge.astro';
+import { groupBySlug, levelByNumber } from '../data/taxonomy.mjs';
+interface Props {
+  href: string;
+  title: string;
+  group: string;
+  level: number;
+  effort?: string;
+  savingEstimate?: string;
+  savingBasis?: string;
+}
+const { href, title, group, level, effort, savingEstimate, savingBasis } = Astro.props;
+const grp = groupBySlug(group);
+const lvl = levelByNumber(level);
+---
+<a class="card tech-card" href={href}>
+  <h3>{title}</h3>
+  <div class="foot">
+    <Badge level={level} title={lvl?.name} label={`L${level} · ${lvl?.name}`} />
+    <Badge label={grp?.short ?? group} />
+    {effort && <Badge label={`Effort: ${effort}`} />}
+    {savingEstimate && <Badge label={`Saving: ${savingEstimate}${savingBasis === 'measured' ? '' : ' (est.)'}`} />}
+  </div>
+</a>

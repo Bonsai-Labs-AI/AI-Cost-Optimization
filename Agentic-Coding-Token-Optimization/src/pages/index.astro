@@ -1,0 +1,106 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { GROUPS, MATURITY_LEVELS, groupBySlug } from '../data/taxonomy.mjs';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const entries = await getCollection('techniques');
+const total = entries.length;
+
+// Techniques per (level, group) to fill the overview bands.
+function groupsForLevel(level: number) {
+  return GROUPS.map((g) => ({
+    group: g,
+    items: entries
+      .filter((e) => e.data.level === level && e.data.group === g.slug)
+      .sort((a, b) => a.data.title.localeCompare(b.data.title)),
+  })).filter((x) => x.items.length > 0);
+}
+
+const bands = MATURITY_LEVELS.map((lvl) => ({
+  lvl,
+  groups: groupsForLevel(lvl.level),
+  count: entries.filter((e) => e.data.level === lvl.level).length,
+}));
+
+// Per-group totals for the "browse by group" cards.
+const groupCounts = Object.fromEntries(
+  GROUPS.map((g) => [g.slug, entries.filter((e) => e.data.group === g.slug).length])
+);
+---
+
+<BaseLayout
+  title="Token Cost Optimization for Agentic Coding"
+  description="A playbook for cutting agentic-coding token spend without losing output quality — technique catalog, maturity levels, and a shared per-tool matrix."
+  wide
+>
+  <section style="max-width: 820px; margin: 8px 0 8px;">
+    <h1>Token Cost Optimization for Agentic Coding</h1>
+    <p style="color:var(--text-dim); font-size:1.12rem;">
+      A playbook for engineering leaders whose agentic-coding spend keeps climbing without
+      matching results. {total} techniques for cutting token cost without losing output
+      quality — organized into three maturity levels and five groups, each with a portable
+      how-to and a shared per-tool matrix.
+    </p>
+    <p style="margin-top:14px;">
+      <a class="chip" href={`${base}/foundations/`}>Start with Foundations →</a>
+      <a class="chip" href={`${base}/techniques/`}>All {total} techniques</a>
+      <a class="chip" href={`${base}/tool-matrix/`}>Tool matrix</a>
+    </p>
+  </section>
+
+  <section style="margin-top:24px;">
+    <h2 style="border-bottom:1px solid var(--border); padding-bottom:8px;">Maturity levels</h2>
+    <p style="color:var(--text-dim);">
+      Start at the top and work down. Level 1 is low-effort config almost every team should
+      turn on; Level 3 is the cost/quality frontier.
+    </p>
+    <div class="levels">
+      {
+        bands.map(({ lvl, groups, count }) => (
+          <div class={`level-band l${lvl.level}`}>
+            <div class="lb-head">
+              <span class="lb-num">L{lvl.level}</span>
+              <h2>{lvl.name}</h2>
+              <span style="color:var(--text-faint); font-size:0.9rem;">— {lvl.tagline}</span>
+              <span class="lb-count">{count} techniques</span>
+            </div>
+            <p class="lb-desc">{lvl.description}</p>
+            <div class="lb-groups">
+              {groups.map(({ group, items }) => (
+                <div class="lb-group">
+                  <a class="group-pill" href={`${base}/techniques/#${group.slug}`}>
+                    {group.short} <span class="n">{items.length}</span>
+                  </a>
+                  <ul class="lb-techs">
+                    {items.map((e) => (
+                      <li>
+                        <a href={`${base}/techniques/${e.id}/`}>{e.data.title}</a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </section>
+
+  <section style="margin-top:40px;">
+    <h2 style="border-bottom:1px solid var(--border); padding-bottom:8px;">Browse by group</h2>
+    <div class="group-grid">
+      {
+        GROUPS.map((g) => (
+          <a class="card" href={`${base}/techniques/#${g.slug}`}>
+            <h3 style="margin:0 0 6px; font-size:1.02rem;">
+              {g.label} <span style="color:var(--text-faint); font-weight:600;">· {groupCounts[g.slug]}</span>
+            </h3>
+            <p style="margin:0; color:var(--text-dim); font-size:0.9rem;">{g.blurb}</p>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,58 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TechniqueCard from '../../components/TechniqueCard.astro';
+import { GROUPS } from '../../data/taxonomy.mjs';
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const entries = await getCollection('techniques');
+
+const byGroup = GROUPS.map((g) => ({
+  g,
+  items: entries
+    .filter((e) => e.data.group === g.slug)
+    .sort(
+      (a, b) =>
+        a.data.level - b.data.level || a.data.title.localeCompare(b.data.title)
+    ),
+}));
+---
+
+<BaseLayout
+  title="All techniques — Agentic Coding Token Costs"
+  description="Every token-cost technique for agentic coding, grouped and sorted by maturity level."
+  wide
+>
+  <h1>All techniques</h1>
+  <p style="color:var(--text-dim);">
+    {entries.length} techniques across {GROUPS.length} groups, sorted by maturity level within
+    each group. Jump to a group:
+  </p>
+  <div class="filters">
+    {GROUPS.map((g) => <a class="chip" href={`#${g.slug}`}>{g.short}</a>)}
+  </div>
+
+  {
+    byGroup.map(({ g, items }) => (
+      <section id={g.slug} style="margin-top:40px; scroll-margin-top:80px;">
+        <h2 style="border-bottom:1px solid var(--border); padding-bottom:8px;">
+          {g.label} <span style="color:var(--text-faint); font-weight:600; font-size:1rem;">· {items.length}</span>
+        </h2>
+        <p style="color:var(--text-dim); margin-top:6px;">{g.blurb}</p>
+        <div class="tech-list" style="margin-top:16px;">
+          {items.map((e) => (
+            <TechniqueCard
+              href={`${base}/techniques/${e.id}/`}
+              title={e.data.title}
+              group={e.data.group}
+              level={e.data.level}
+              effort={e.data.effort}
+              savingEstimate={e.data.savingEstimate}
+              savingBasis={e.data.savingBasis}
+            />
+          ))}
+        </div>
+      </section>
+    ))
+  }
+</BaseLayout>

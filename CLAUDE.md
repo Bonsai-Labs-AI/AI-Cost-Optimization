@@ -18,6 +18,13 @@ technique's full detail page. Internal Bonsai Labs research.
 
 Audience framing: a maturity model for *clients* — "where are you, what's the next win."
 
+> **Part 2 lives in this repo too:** `Agentic-Coding-Token-Optimization/` is a separate,
+> self-contained Astro project ("Token Cost Optimization for Agentic Coding" — read its own
+> CLAUDE.md before working there). The two sites share no code, but share one deployment:
+> `.github/workflows/deploy.yml` builds both and publishes Part 2 under
+> `/AI-Cost-Optimization/agentic-coding/`, all behind the same StatiCrypt password
+> (`SITE_PASSWORD` repo secret).
+
 ## Architecture (how it fits together)
 
 - **`src/data/taxonomy.mjs` is the single source of truth.** It defines the 3
@@ -77,7 +84,8 @@ node scripts/generate-stubs.mjs --report   # list techniques still missing a fil
   served HTML + the bundled script and dispatch a click. (This is how a hidden-panel bug
   was found: the handler ran and populated the list but `detail.hidden` was never reset to
   `false` on select.)
-- Not a git repo yet. Don't commit/push unless asked.
+- Git repo (`Bonsai-Labs-AI/AI-Cost-Optimization`, branch `main`; push deploys to GitHub
+  Pages). Don't commit/push unless asked.
 
 ## Current status
 

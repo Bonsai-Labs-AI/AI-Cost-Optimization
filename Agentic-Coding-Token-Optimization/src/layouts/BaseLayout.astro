@@ -1,0 +1,43 @@
+---
+import '../styles/global.css';
+interface Props {
+  title: string;
+  description?: string;
+  wide?: boolean;
+}
+const { title, description, wide } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const wrapCls = wide ? 'wrap wide' : 'wrap';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {description && <meta name="description" content={description} />}
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🪙</text></svg>" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="wrap wide">
+        <a class="brand" href={base + '/'}>Bonsai · <span>Agentic Coding Token Costs</span></a>
+        <nav class="nav">
+          <a href={base + '/'}>Overview</a>
+          <a href={base + '/foundations/'}>Foundations</a>
+          <a href={base + '/techniques/'}>Techniques</a>
+          <a href={base + '/tool-matrix/'}>Tool matrix</a>
+        </nav>
+      </div>
+    </header>
+    <main class={wrapCls} style="padding-top: 32px;">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="wrap wide">
+        Bonsai Labs — Token Cost Optimization for Agentic Coding.
+      </div>
+    </footer>
+  </body>
+</html>

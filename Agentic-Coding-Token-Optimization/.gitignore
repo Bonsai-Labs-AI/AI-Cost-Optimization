@@ -1,0 +1,16 @@
+# build output
+dist/
+.astro/
+
+# dependencies
+node_modules/
+
+# logs / env
+*.log
+.env
+.env.*
+.DS_Store
+
+# StatiCrypt writes this when run without --config false; the protect script
+# passes an explicit salt so it's never needed. Never commit it.
+.staticrypt.json

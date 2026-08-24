@@ -1,0 +1,22 @@
+{
+  "name": "bonsai-agentic-coding-token-optimization",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Token Cost Optimization for Agentic Coding — technique catalog + shared tool matrix, as a static Astro site.",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "astro check",
+    "protect": "staticrypt dist -r -d . --config false --salt 7c4e2a91d0f8b3651ac97e2d4b60f83a --short --template-title \"Bonsai Labs — Research Access\" --template-instructions \"This research is shared under access control. Enter the password included with your invitation to continue.\" --template-button \"View research\" --template-color-primary \"#2f6f4f\" --template-color-secondary \"#1f2937\""
+  },
+  "dependencies": {
+    "astro": "^5.6.1"
+  },
+  "devDependencies": {
+    "staticrypt": "^3.5.4"
+  }
+}

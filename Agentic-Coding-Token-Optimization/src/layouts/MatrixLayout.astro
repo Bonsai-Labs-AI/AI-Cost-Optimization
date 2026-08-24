@@ -1,0 +1,18 @@
+---
+// Layout for the wide tool-matrix markdown page. Wraps the rendered markdown in
+// a horizontally-scrollable article so the 8-column table never squashes.
+import BaseLayout from './BaseLayout.astro';
+interface Props {
+  frontmatter?: { title?: string; description?: string };
+}
+const { frontmatter } = Astro.props;
+const title = frontmatter?.title ?? 'Tool matrix';
+const description = frontmatter?.description;
+---
+<BaseLayout title={title} description={description} wide>
+  <div class="matrix">
+    <article class="prose">
+      <slot />
+    </article>
+  </div>
+</BaseLayout>

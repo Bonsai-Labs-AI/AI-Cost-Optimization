@@ -1,0 +1,146 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Badge from '../../components/Badge.astro';
+import { groupBySlug, levelByNumber } from '../../data/taxonomy.mjs';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('techniques');
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry, all: entries },
+  }));
+}
+
+const { entry, all } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const grp = groupBySlug(d.group);
+const lvl = levelByNumber(d.level);
+
+const titleById = new Map(all.map((e: any) => [e.id, e.data.title]));
+const relatedLinks = (d.related ?? [])
+  .map((id: string) => ({ id, title: titleById.get(id) }))
+  .filter((r: any) => r.title);
+
+const basisLabel: Record<string, string> = {
+  measured: 'our benchmark',
+  cited: 'cited source',
+  estimate: 'estimate',
+};
+
+function formatSource(s: any) {
+  return [s.authors, s.title ? `“${s.title}”` : null, s.publisher, s.year]
+    .filter(Boolean)
+    .join('. ');
+}
+
+// Data for the inline citation popovers, keyed by source id (== footnote id).
+const citationData = Object.fromEntries(
+  d.sources.map((s: any) => [
+    s.id,
+    {
+      title: s.title ?? '',
+      pub: [s.authors, s.publisher, s.year].filter(Boolean).join(' · '),
+      note: (s.verify ? '⚠ practitioner/vendor-sourced. ' : '') + (s.note ?? ''),
+      url: s.url ?? '',
+      kind: s.kind ?? '',
+    },
+  ])
+);
+---
+
+<BaseLayout title={`${d.title} — Agentic Coding Token Costs`} description={d.savingEstimate ? `${d.title}. Saving: ${d.savingEstimate}.` : d.title}>
+  <p style="margin:0 0 4px;">
+    <a href={`${base}/techniques/`} style="color:var(--text-faint); font-size:0.88rem;">← All techniques</a>
+    <span style="color:var(--text-faint);"> / </span>
+    <a href={`${base}/techniques/#${d.group}`} style="color:var(--text-dim); font-size:0.88rem;">{grp?.label}</a>
+  </p>
+
+  <h1>{d.title}</h1>
+
+  <div class="meta-row">
+    <Badge level={d.level} title={lvl?.name} label={`Level ${d.level} — ${lvl?.name}`} />
+    <Badge label={grp?.label ?? d.group} />
+  </div>
+
+  <div class="scorecard">
+    <div class="cell has-why">
+      <div class="k">Maturity level</div>
+      <div class="v">L{d.level} · {lvl?.name}</div>
+      {lvl?.description && <div class="cell-why">{lvl.description}</div>}
+    </div>
+    <div class="cell">
+      <div class="k">Effort</div>
+      <div class="v">{d.effort ?? '—'}</div>
+    </div>
+    <div class="cell">
+      <div class="k">Cost lever</div>
+      <div class="v" style="font-size:0.95rem;">{d.costLever.length ? d.costLever.join(', ') : '—'}</div>
+    </div>
+    <div class="cell">
+      <div class="k">Est. saving</div>
+      <div class="v" style="font-size:0.98rem;">{d.savingEstimate}</div>
+      <div style="font-size:0.74rem; color:var(--text-faint); margin-top:2px;">basis: {basisLabel[d.savingBasis] ?? d.savingBasis}</div>
+    </div>
+    <div class="cell">
+      <div class="k">Quality risk</div>
+      <div class="v">{d.qualityRisk ?? '—'}</div>
+    </div>
+  </div>
+
+  {
+    d.appliesTo.length > 0 && (
+      <div class="applies">
+        <div class="k">Applies to</div>
+        <div class="tools">
+          {d.appliesTo.map((t: string) => <span class="tool">{t}</span>)}
+        </div>
+      </div>
+    )
+  }
+
+  <article class="prose" style="margin-top:20px;">
+    <Content />
+  </article>
+
+  {
+    relatedLinks.length > 0 && (
+      <section style="margin-top:32px;">
+        <h2 style="font-size:1.1rem; border-bottom:1px solid var(--border); padding-bottom:6px;">Related techniques</h2>
+        <ul>
+          {relatedLinks.map((r: any) => (
+            <li><a href={`${base}/techniques/${r.id}/`}>{r.title}</a></li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  {
+    d.sources.length > 0 && (
+      <section class="references" style="margin-top:40px; border-top:1px solid var(--border); padding-top:18px;">
+        <h2>References</h2>
+        <ol>
+          {d.sources.map((s: any) => (
+            <li id={`ref-${s.id}`}>
+              {s.url ? <a href={s.url}>{formatSource(s)}</a> : <span>{formatSource(s)}</span>}
+              {s.kind && <span class="pub"> · {s.kind}</span>}
+              {s.verify && <span class="verify"> · ⚠ practitioner-sourced</span>}
+              {s.accessed && <span class="pub"> · accessed {s.accessed}</span>}
+              {s.note && <div class="pub" style="margin-top:2px;">{s.note}</div>}
+            </li>
+          ))}
+        </ol>
+      </section>
+    )
+  }
+
+  <script type="application/json" id="citation-data" set:html={JSON.stringify(citationData)} />
+
+  <script>
+    import { initCitationPopovers } from '../../scripts/citationPopover';
+    initCitationPopovers(document);
+  </script>
+</BaseLayout>
